@@ -29,7 +29,7 @@ export function UserMenu() {
       <DropdownMenuTrigger asChild>
         <button className="flex w-full items-center gap-3 rounded-md px-2 py-2 text-left hover:bg-sidebar-accent transition-colors focus-visible:outline-none">
           <Avatar className="h-8 w-8 shrink-0">
-            <AvatarImage src={MOCK_USER.avatarUrl} alt={MOCK_USER.name} />
+            {MOCK_USER.avatarUrl && <AvatarImage src={MOCK_USER.avatarUrl} alt={MOCK_USER.name} />}
             <AvatarFallback>{initials}</AvatarFallback>
           </Avatar>
           <div className="flex min-w-0 flex-1 flex-col">
