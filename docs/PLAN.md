@@ -34,15 +34,15 @@
 
 ### Entregas
 
-- [ ] Inicializar projeto com `create-next-app` (TypeScript, App Router, Tailwind)
-- [ ] Instalar e configurar shadcn/ui (New York style, tema customizado)
-- [ ] Configurar paleta de cores no `tailwind.config.ts` (`primary: #1E3A5F`, `accent: #2563EB`)
-- [ ] Instalar dependências: `recharts`, `@dnd-kit/core`, `@dnd-kit/sortable`, `resend`
-- [ ] Configurar `tsconfig.json` com path alias `@/*`
-- [ ] Criar `.env.example` com todas as variáveis necessárias
-- [ ] Criar `src/types/index.ts` com tipos globais (`Lead`, `Deal`, `Activity`, `Workspace`, `WorkspaceMember`)
-- [ ] Configurar fonte Inter no `layout.tsx` raiz
-- [ ] Verificar `npm run dev` sem erros
+- [x] Inicializar projeto com `create-next-app` (TypeScript, App Router, Tailwind)
+- [x] Instalar e configurar shadcn/ui (New York style, tema customizado)
+- [x] Configurar paleta de cores no `tailwind.config.ts` (`primary: #1E3A5F`, `accent: #2563EB`)
+- [x] Instalar dependências: `recharts`, `@dnd-kit/core`, `@dnd-kit/sortable`, `resend`
+- [x] Configurar `tsconfig.json` com path alias `@/*`
+- [x] Criar `.env.example` com todas as variáveis necessárias
+- [x] Criar `src/types/index.ts` com tipos globais (`Lead`, `Deal`, `Activity`, `Workspace`, `WorkspaceMember`)
+- [x] Configurar fonte Inter no `layout.tsx` raiz
+- [x] Verificar `npm run dev` sem erros
 
 **Commit final:** `feat: project setup with Next.js, shadcn/ui, and design system`
 
