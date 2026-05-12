@@ -96,15 +96,15 @@
 
 ### Entregas
 
-- [ ] Criar grupo de rotas `src/app/(dashboard)/`
-- [ ] Layout `src/app/(dashboard)/layout.tsx` com sidebar + área de conteúdo
-- [ ] Componente `Sidebar` — logo, itens de navegação (Dashboard, Pipeline, Leads), rodapé com avatar do usuário
-- [ ] Componente `WorkspaceSwitcher` — dropdown com nome do workspace ativo (mockado)
-- [ ] Componente `UserMenu` — dropdown com "Configurações" e "Sair"
-- [ ] Rotas placeholder: `/dashboard`, `/pipeline`, `/leads`
-- [ ] Navegação ativa destacada na sidebar (item selecionado)
-- [ ] Sidebar recolhível em mobile (hambúrguer)
-- [ ] Testar navegação entre seções e comportamento mobile
+- [x] Criar grupo de rotas `src/app/(dashboard)/`
+- [x] Layout `src/app/(dashboard)/layout.tsx` com sidebar + área de conteúdo
+- [x] Componente `Sidebar` — logo, itens de navegação (Dashboard, Pipeline, Leads), rodapé com avatar do usuário
+- [x] Componente `WorkspaceSwitcher` — dropdown com nome do workspace ativo (mockado)
+- [x] Componente `UserMenu` — dropdown com "Configurações" e "Sair"
+- [x] Rotas placeholder: `/dashboard`, `/pipeline`, `/leads`
+- [x] Navegação ativa destacada na sidebar (item selecionado)
+- [x] Sidebar recolhível em mobile (hambúrguer)
+- [x] Testar navegação entre seções e comportamento mobile
 
 **Commit final:** `feat: authenticated app shell with sidebar and navigation`
 
