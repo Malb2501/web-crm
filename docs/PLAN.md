@@ -168,16 +168,22 @@
 
 ### Entregas
 
-- [ ] Página `/dashboard` com grid de métricas
-- [ ] Componente `MetricCard` — ícone, label, valor, variação % vs mês anterior
-- [ ] 4 cards: Total de Leads, Negócios Abertos, Valor do Pipeline (R$), Taxa de Conversão (%)
-- [ ] Componente `FunnelChart` com Recharts — barras horizontais por etapa do pipeline
-- [ ] Componente `DealsTable` — tabela "Negócios com prazo próximo" (próximos 7 dias)
-- [ ] Layout responsivo: cards em grid 2x2 no mobile, 4x1 no desktop
-- [ ] Skeleton loaders para todos os componentes
-- [ ] Testar renderização dos gráficos e responsividade
+- [x] Página `/dashboard` com grid de métricas
+- [x] Componente `MetricCard` — ícone, label, valor, variação % vs mês anterior
+- [x] 4 cards: Total de Leads, Negócios Abertos, Valor do Pipeline (R$), Taxa de Conversão (%)
+- [x] Componente `FunnelChart` com Recharts — barras verticais por etapa do pipeline com cores do STAGE_CONFIG
+- [x] Componente `DealsTable` — tabela "Prazos Próximos" (próximos 7 dias) com link para /pipeline
+- [x] Layout responsivo: cards em grid 2x2 no mobile, 4x1 no desktop
+- [x] Skeleton loaders para todos os componentes
+- [x] Testar renderização dos gráficos e responsividade
 
-**Commit final:** `feat: dashboard UI with KPI cards and funnel chart (mocked data)`
+**Extras entregues:**
+- Título de cada negócio na tabela é link clicável para `/pipeline`
+- Badge ⚠️ em deals com ≤ 2 dias para o prazo
+- Valores calculados a partir dos mocks reais (15 leads, R$ 202.560 pipeline, 50% conversão)
+- `src/lib/mock/dashboard.ts` centraliza toda a lógica de métricas derivadas
+
+**Commit final:** `feat: merge M7 dashboard UI into master`
 
 ---
 
