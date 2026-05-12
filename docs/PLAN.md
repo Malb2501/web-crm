@@ -55,14 +55,14 @@
 
 ### Entregas
 
-- [ ] Criar rota `src/app/(marketing)/page.tsx`
-- [ ] Componente `HeroSection` — headline, subtítulo, CTA "Começar grátis" e "Ver demonstração"
-- [ ] Componente `FeaturesSection` — 4 blocos: Pipeline Kanban, Gestão de Leads, Dashboard, Multi-empresa
-- [ ] Componente `PricingSection` — cards Free vs Pro com lista de benefícios e botão de CTA
-- [ ] Componente `FooterSection` — logo, links institucionais
-- [ ] Navbar pública com logo + botões "Entrar" e "Começar grátis"
-- [ ] Layout responsivo (mobile-first, breakpoints sm/md/lg)
-- [ ] Testar no browser em 360px e 1280px
+- [x] Criar rota `src/app/(marketing)/page.tsx`
+- [x] Componente `HeroSection` — headline, subtítulo, CTA "Começar grátis" e "Ver demonstração"
+- [x] Componente `FeaturesSection` — 4 blocos: Pipeline Kanban, Gestão de Leads, Dashboard, Multi-empresa
+- [x] Componente `PricingSection` — cards Free vs Pro com lista de benefícios e botão de CTA
+- [x] Componente `FooterSection` — logo, links institucionais
+- [x] Navbar pública com logo + botões "Entrar" e "Começar grátis"
+- [x] Layout responsivo (mobile-first, breakpoints sm/md/lg)
+- [x] Testar no browser em 360px e 1280px
 
 **Commit final:** `feat: public landing page with hero, features, and pricing sections`
 
