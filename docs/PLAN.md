@@ -214,7 +214,10 @@
 - [ ] Criar workspace automaticamente no primeiro login (trigger ou Server Action)
 - [ ] Testar login, logout, e proteção de rota no browser
 
-**Commit final:** `feat: Supabase auth integration and database schema with RLS`
+**Commits entregues:**
+- `feat: Supabase core setup — clients, packages, and env (aula 3.1)` — b8df224
+- `feat: database schema, RLS policies, and TypeScript types (aula 3.2)` — 9103ad0
+- PR #2 mergeado em master — cb2a214
 
 ---
 
