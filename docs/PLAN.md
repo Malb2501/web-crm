@@ -197,14 +197,17 @@
 - [x] Criar projeto no Supabase e configurar variáveis de ambiente
 - [x] Instalar `@supabase/supabase-js` e `@supabase/ssr`
 - [x] Criar `src/lib/supabase/client.ts` (browser) e `src/lib/supabase/server.ts` (cookies)
-- [ ] Migration `001_initial_schema.sql`:
-  - [ ] Tabela `workspaces` (`id`, `name`, `slug`, `plan`, `created_at`)
-  - [ ] Tabela `workspace_members` (`workspace_id`, `user_id`, `role`, `joined_at`)
-  - [ ] Tabela `leads` (`id`, `workspace_id`, `name`, `email`, `phone`, `company`, `role`, `status`, `owner_id`, `created_at`)
-  - [ ] Tabela `deals` (`id`, `workspace_id`, `lead_id`, `title`, `value`, `stage`, `owner_id`, `deadline`, `created_at`)
-  - [ ] Tabela `activities` (`id`, `lead_id`, `workspace_id`, `type`, `description`, `author_id`, `created_at`)
-  - [ ] Tabela `subscriptions` (`workspace_id`, `stripe_customer_id`, `stripe_subscription_id`, `plan`, `status`, `updated_at`)
-- [ ] Políticas RLS em todas as tabelas (via `workspace_members`)
+- [x] Migration `001_initial_schema.sql`:
+  - [x] Tabela `workspaces` (`id`, `name`, `slug`, `plan`, `onboarding_completed`, `created_at`)
+  - [x] Tabela `workspace_members` (`workspace_id`, `user_id`, `role`, `joined_at`)
+  - [x] Tabela `leads` (`id`, `workspace_id`, `name`, `email`, `phone`, `company`, `job_title`, `status`, `owner_id`, `created_at`)
+  - [x] Tabela `deals` (`id`, `workspace_id`, `lead_id`, `title`, `value`, `stage`, `owner_id`, `deadline`, `created_at`)
+  - [x] Tabela `activities` (`id`, `lead_id`, `workspace_id`, `type`, `description`, `author_id`, `created_at`)
+  - [x] Tabela `subscriptions` (`workspace_id`, `stripe_customer_id`, `stripe_subscription_id`, `plan`, `status`, `updated_at`)
+- [x] Políticas RLS em todas as tabelas (via `workspace_members`) — 23 políticas aplicadas
+- [x] Trigger `on_workspace_created` → cria subscription Free automaticamente
+- [x] Tipos TypeScript em `src/types/supabase.ts` (Database, Tables, InsertDTO, UpdateDTO)
+- [x] Clientes Supabase tipados com `Database` em `client.ts` e `server.ts`
 - [ ] Middleware Next.js para proteger rotas do grupo `(dashboard)`
 - [ ] Conectar formulários de login e cadastro ao Supabase Auth
 - [ ] Redirecionar após login para `/dashboard`, após logout para `/login`
