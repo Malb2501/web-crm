@@ -14,6 +14,9 @@ interface KanbanColumnProps {
   index: number
   onDealClick: (deal: Deal) => void
   onAddDeal: (stage: DealStage) => void
+  onEditDeal: (deal: Deal) => void
+  onMoveDeal: (id: string, stage: DealStage) => void
+  onDeleteDeal: (id: string) => void
 }
 
 function formatCurrency(value: number) {
@@ -24,7 +27,7 @@ function formatCurrency(value: number) {
   }).format(value)
 }
 
-export function KanbanColumn({ stage, deals, index, onDealClick, onAddDeal }: KanbanColumnProps) {
+export function KanbanColumn({ stage, deals, index, onDealClick, onAddDeal, onEditDeal, onMoveDeal, onDeleteDeal }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: stage })
   const cfg        = STAGE_CONFIG[stage]
   const totalValue = deals.reduce((sum, d) => sum + d.value, 0)
@@ -114,7 +117,14 @@ export function KanbanColumn({ stage, deals, index, onDealClick, onAddDeal }: Ka
           strategy={verticalListSortingStrategy}
         >
           {deals.map(deal => (
-            <DealCard key={deal.id} deal={deal} onClick={onDealClick} />
+            <DealCard
+              key={deal.id}
+              deal={deal}
+              onClick={onDealClick}
+              onEdit={onEditDeal}
+              onMove={onMoveDeal}
+              onDelete={onDeleteDeal}
+            />
           ))}
         </SortableContext>
 

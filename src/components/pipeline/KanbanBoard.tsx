@@ -165,6 +165,9 @@ export function KanbanBoard() {
               index={index}
               onDealClick={setDetailDeal}
               onAddDeal={(s) => setFormSheet({ open: true, stage: s })}
+              onEditDeal={(deal) => setFormSheet({ open: true, deal })}
+              onMoveDeal={handleMoveDeal}
+              onDeleteDeal={handleDeleteDeal}
             />
           ))}
 
@@ -174,7 +177,14 @@ export function KanbanBoard() {
 
         <DragOverlay dropAnimation={{ duration: 160, easing: "cubic-bezier(0.18,0.67,0.6,1.22)" }}>
           {activeDeal && (
-            <DealCard deal={activeDeal} onClick={() => {}} isDragOverlay />
+            <DealCard
+              deal={activeDeal}
+              onClick={() => {}}
+              onEdit={() => {}}
+              onMove={() => {}}
+              onDelete={() => {}}
+              isDragOverlay
+            />
           )}
         </DragOverlay>
       </DndContext>
