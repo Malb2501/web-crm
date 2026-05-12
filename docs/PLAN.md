@@ -75,15 +75,15 @@
 
 ### Entregas
 
-- [ ] Criar grupo de rotas `src/app/(auth)/`
-- [ ] Página `/login` — formulário e-mail + senha, link "Esqueci minha senha", link "Criar conta"
-- [ ] Página `/signup` — formulário nome + e-mail + senha, checkbox de termos
-- [ ] Página `/forgot-password` — campo e-mail + botão enviar
-- [ ] Layout compartilhado do grupo auth (logo centralizado, fundo com gradiente da paleta)
-- [ ] Componente `AuthCard` reutilizável (container branco com sombra)
-- [ ] Validação de formulário client-side (campos obrigatórios, formato de e-mail)
-- [ ] Estados de loading nos botões de submit
-- [ ] Testar fluxo visual completo no browser
+- [x] Criar grupo de rotas `src/app/(auth)/`
+- [x] Página `/login` — formulário e-mail + senha, link "Esqueci minha senha", link "Criar conta"
+- [x] Página `/signup` — formulário nome + e-mail + senha, checkbox de termos
+- [x] Página `/forgot-password` — campo e-mail + botão enviar
+- [x] Layout compartilhado do grupo auth (logo centralizado, fundo com gradiente da paleta)
+- [x] Componente `AuthCard` reutilizável (container branco com sombra)
+- [x] Validação de formulário client-side (campos obrigatórios, formato de e-mail)
+- [x] Estados de loading nos botões de submit
+- [x] Testar fluxo visual completo no browser
 
 **Commit final:** `feat: authentication screens (login, signup, forgot-password)`
 
@@ -299,7 +299,7 @@
 
 - [ ] Detectar usuários sem leads/deals no primeiro login (`onboarding_completed = false` em `workspaces`)
 - [ ] Modal/página de boas-vindas: "Configure seu primeiro workspace"
-  - [ ] Step 1 — Nome do workspace e segmento de negócio
+  - [x] Step 1 — Nome do workspace (versão UI mockada entregue no M3)
   - [ ] Step 2 — Convidar colaboradores (opcional, pulável)
   - [ ] Step 3 — Criar primeiro lead guiado
 - [ ] Checklist de onboarding no dashboard (dismissível) com itens:
