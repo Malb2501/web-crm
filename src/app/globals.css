@@ -122,3 +122,34 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), Arial, sans-serif;
 }
+
+/* ─── Kanban Pipeline ────────────────────────────────────── */
+@keyframes columnSlideIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.kanban-column {
+  animation: columnSlideIn 0.35s ease-out both;
+}
+
+.deal-card:hover:not([data-dragging="true"]) {
+  border-color: var(--stage-border, rgba(51,65,85,0.8)) !important;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px var(--stage-glow, transparent);
+}
+
+/* Thin scrollbar for kanban columns */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100,116,139,0.3) transparent;
+}
+.scrollbar-thin::-webkit-scrollbar { width: 4px; }
+.scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+.scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(100,116,139,0.3); border-radius: 2px; }
+
+/* Suppress default scroll in the kanban board outer container */
+@media (prefers-reduced-motion: reduce) {
+  .kanban-column { animation: none; }
+  .deal-card { transition: none !important; }
+}
