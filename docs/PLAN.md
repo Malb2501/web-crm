@@ -194,9 +194,9 @@
 
 ### Entregas
 
-- [ ] Criar projeto no Supabase e configurar variáveis de ambiente
-- [ ] Instalar `@supabase/supabase-js` e `@supabase/ssr`
-- [ ] Criar `src/lib/supabase/client.ts` (browser) e `src/lib/supabase/server.ts` (cookies)
+- [x] Criar projeto no Supabase e configurar variáveis de ambiente
+- [x] Instalar `@supabase/supabase-js` e `@supabase/ssr`
+- [x] Criar `src/lib/supabase/client.ts` (browser) e `src/lib/supabase/server.ts` (cookies)
 - [ ] Migration `001_initial_schema.sql`:
   - [ ] Tabela `workspaces` (`id`, `name`, `slug`, `plan`, `created_at`)
   - [ ] Tabela `workspace_members` (`workspace_id`, `user_id`, `role`, `joined_at`)
