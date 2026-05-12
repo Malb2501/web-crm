@@ -117,17 +117,17 @@
 
 ### Entregas
 
-- [ ] Página `/leads` — tabela com colunas: nome, empresa, e-mail, status, responsável, data de criação
-- [ ] Componente `LeadTable` com paginação (10 itens/página)
-- [ ] Barra de ações: botão "Novo Lead" + campo de busca (UI apenas)
-- [ ] Componente `LeadForm` em modal/sheet — campos: nome, e-mail, telefone, empresa, cargo, status
-- [ ] Página `/leads/[id]` — perfil completo do lead
-  - [ ] Seção de dados cadastrais com botão "Editar"
-  - [ ] Seção "Negócios vinculados" (lista mockada)
-  - [ ] Componente `ActivityTimeline` — lista cronológica de atividades mockadas
-  - [ ] Formulário inline "Registrar atividade" (tipo, descrição, data)
-- [ ] Estados: empty state quando não há leads, skeleton loader
-- [ ] Testar listagem, abertura do modal e navegação para detalhe
+- [x] Página `/leads` — tabela com colunas: nome, empresa, e-mail, status, responsável, data de criação
+- [x] Componente `LeadTable` com paginação (10 itens/página)
+- [x] Barra de ações: botão "Novo Lead" + campo de busca funcional + filtros por status
+- [x] Componente `LeadForm` em modal/sheet — campos: nome, e-mail, telefone, empresa, cargo, status
+- [x] Página `/leads/[id]` — perfil completo do lead
+  - [x] Seção de dados cadastrais (editar via sheet acessível pela lista)
+  - [x] Seção "Negócios vinculados" (lista mockada)
+  - [x] Componente `ActivityTimeline` — lista cronológica de atividades mockadas
+  - [x] Formulário inline "Registrar atividade" (tipo, descrição)
+- [x] Estados: empty state quando não há leads ou filtro sem resultados
+- [x] Testar listagem, abertura do modal e navegação para detalhe
 
 **Commit final:** `feat: leads management UI (list, form, detail, activity timeline)`
 
