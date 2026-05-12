@@ -140,18 +140,24 @@
 
 ### Entregas
 
-- [ ] Página `/pipeline` com layout horizontal de colunas
-- [ ] Componente `KanbanBoard` — container das 6 colunas
-- [ ] Componente `KanbanColumn` — cabeçalho com nome da etapa + contador + valor total
-- [ ] Componente `DealCard` — título, lead vinculado, valor (R$), responsável, prazo (badge colorido se vencido)
-- [ ] Drag-and-drop entre colunas com `@dnd-kit` (optimistic update no estado local)
-- [ ] Modal "Novo Negócio" — campos: título, lead vinculado, valor estimado, responsável, prazo, etapa
-- [ ] Modal de detalhe do negócio ao clicar no card
-- [ ] Colunas "Fechado Ganho" (verde) e "Fechado Perdido" (vermelho) com estilo diferenciado
-- [ ] Scroll horizontal em telas menores
-- [ ] Testar drag-and-drop entre todas as colunas
+- [x] Página `/pipeline` com layout horizontal de colunas
+- [x] Componente `KanbanBoard` — container das 6 colunas
+- [x] Componente `KanbanColumn` — cabeçalho com nome da etapa + contador + valor total
+- [x] Componente `DealCard` — título, lead vinculado, valor (R$), responsável, prazo (badge colorido se vencido)
+- [x] Drag-and-drop entre colunas com `@dnd-kit` (optimistic update no estado local)
+- [x] Modal "Novo Negócio" — campos: título, lead vinculado, valor estimado, responsável, prazo, etapa
+- [x] Modal de detalhe do negócio ao clicar no card
+- [x] Colunas "Fechado Ganho" (verde) e "Fechado Perdido" (vermelho) com estilo diferenciado
+- [x] Scroll horizontal em telas menores
+- [x] Testar drag-and-drop entre todas as colunas
 
-**Commit final:** `feat: kanban pipeline UI with drag-and-drop (mocked data)`
+**Extras entregues:**
+- Menu ⋯ em cada card (hover) com Editar, Mover para…, Marcar como Ganho/Perdido, Excluir
+- Toolbar com chips de "Em pipeline" (R$) e "Ganho" (R$) atualizados em tempo real
+- Design inspirado no Pipedrive: borda esquerda colorida por estágio, stagger animation nas colunas
+- 18 deals mockados distribuídos nos 6 estágios
+
+**Commit final:** `feat: M6 — Kanban Pipeline UI com drag-and-drop (#kanban-ui)`
 
 ---
 
