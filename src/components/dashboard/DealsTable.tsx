@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { CalendarDays, AlertCircle } from "lucide-react"
 import { StageBadge } from "@/components/pipeline/StageBadge"
 import { cn } from "@/lib/utils"
@@ -73,7 +74,12 @@ export function DealsTable({ deals }: DealsTableProps) {
             return (
               <tr key={deal.id} className="group transition-colors hover:bg-muted/30">
                 <td className="py-3 pr-4">
-                  <p className="font-medium text-foreground line-clamp-1">{deal.title}</p>
+                  <Link
+                    href="/pipeline"
+                    className="font-medium text-foreground line-clamp-1 hover:text-primary hover:underline underline-offset-2 transition-colors"
+                  >
+                    {deal.title}
+                  </Link>
                   {deal.lead?.company && (
                     <p className="text-xs text-muted-foreground">{deal.lead.company}</p>
                   )}
