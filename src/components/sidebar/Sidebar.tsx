@@ -100,6 +100,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             </span>
           </div>
           <button
+            type="button"
             onClick={onClose}
             className="rounded-md p-1 text-sidebar-foreground/40 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors lg:hidden"
             aria-label="Fechar menu"

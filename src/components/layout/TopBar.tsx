@@ -33,6 +33,7 @@ export function TopBar({ onMenuClick }: TopBarProps) {
     <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-card px-4 lg:px-6">
       {/* Hamburguer — mobile only */}
       <button
+        type="button"
         onClick={onMenuClick}
         className={cn(
           "rounded-md p-1.5 text-muted-foreground transition-colors",
@@ -52,6 +53,7 @@ export function TopBar({ onMenuClick }: TopBarProps) {
       <div className="ml-auto flex items-center gap-1">
         {/* Sino de notificações */}
         <button
+          type="button"
           className={cn(
             "relative rounded-md p-2 text-muted-foreground transition-colors",
             "hover:bg-muted hover:text-foreground",
@@ -72,6 +74,7 @@ export function TopBar({ onMenuClick }: TopBarProps) {
 
         {/* Avatar do usuário */}
         <button
+          type="button"
           className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card"
           aria-label="Menu do usuário"
         >
