@@ -30,8 +30,12 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# env files — block all real env files, but allow the example template
 .env*
+!.env.example
+
+# Claude Code internal config
+.claude/
 
 # vercel
 .vercel
