@@ -103,6 +103,10 @@ export function KanbanBoard() {
     setFormSheet({ open: true, deal })
   }
 
+  function handleMoveDeal(id: string, stage: DealStage) {
+    setDeals(prev => prev.map(d => d.id === id ? { ...d, stage } : d))
+  }
+
   // Metrics
   const activeDeals  = deals.filter(d => d.stage !== "closed_lost")
   const wonDeals     = deals.filter(d => d.stage === "closed_won")
@@ -188,6 +192,7 @@ export function KanbanBoard() {
         onClose={() => setDetailDeal(null)}
         onEdit={handleEditFromDetail}
         onDelete={handleDeleteDeal}
+        onMove={handleMoveDeal}
       />
     </div>
   )
