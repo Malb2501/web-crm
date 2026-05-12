@@ -1,90 +1,134 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { TrendingUp, Users, KanbanSquare, DollarSign } from "lucide-react"
+import { Suspense } from "react"
+import { Users, KanbanSquare, DollarSign, TrendingUp } from "lucide-react"
+import { MetricCard } from "@/components/dashboard/MetricCard"
+import { FunnelChart } from "@/components/dashboard/FunnelChart"
+import { DealsTable } from "@/components/dashboard/DealsTable"
+import {
+  MetricCardSkeleton,
+  FunnelChartSkeleton,
+  DealsTableSkeleton,
+} from "@/components/dashboard/DashboardSkeletons"
+import { DASHBOARD_METRICS, FUNNEL_DATA, UPCOMING_DEALS } from "@/lib/mock/dashboard"
 
-const METRIC_CARDS = [
+function formatCurrency(v: number) {
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    maximumFractionDigits: 0,
+    notation: v >= 1_000_000 ? "compact" : "standard",
+  }).format(v)
+}
+
+const METRICS = [
   {
     title: "Total de Leads",
-    value: "124",
-    delta: "+12%",
-    deltaPositive: true,
+    value: String(DASHBOARD_METRICS.totalLeads.current),
+    delta: DASHBOARD_METRICS.totalLeads.delta,
     icon: Users,
-    description: "vs. mês anterior",
+    accentColor: "#3B82F6",
   },
   {
     title: "Negócios Abertos",
-    value: "38",
-    delta: "+5%",
-    deltaPositive: true,
+    value: String(DASHBOARD_METRICS.openDeals.current),
+    delta: DASHBOARD_METRICS.openDeals.delta,
     icon: KanbanSquare,
-    description: "vs. mês anterior",
+    accentColor: "#06B6D4",
   },
   {
     title: "Valor do Pipeline",
-    value: "R$ 284.500",
-    delta: "+18%",
-    deltaPositive: true,
+    value: formatCurrency(DASHBOARD_METRICS.pipelineValue.current),
+    delta: DASHBOARD_METRICS.pipelineValue.delta,
     icon: DollarSign,
-    description: "vs. mês anterior",
+    accentColor: "#F59E0B",
   },
   {
     title: "Taxa de Conversão",
-    value: "23,4%",
-    delta: "-2%",
-    deltaPositive: false,
+    value: `${DASHBOARD_METRICS.conversionRate.current}%`,
+    delta: DASHBOARD_METRICS.conversionRate.delta,
     icon: TrendingUp,
-    description: "vs. mês anterior",
+    accentColor: "#22C55E",
   },
 ]
 
+function MetricsGrid() {
+  return (
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      {METRICS.map(m => (
+        <MetricCard key={m.title} {...m} />
+      ))}
+    </div>
+  )
+}
+
+function FunnelSection() {
+  return (
+    <div className="rounded-xl border border-border/60 bg-card p-5">
+      <div className="mb-4">
+        <h3 className="text-sm font-semibold text-foreground">Funil de Vendas</h3>
+        <p className="text-xs text-muted-foreground">Negócios por etapa do pipeline</p>
+      </div>
+      <FunnelChart data={FUNNEL_DATA} />
+    </div>
+  )
+}
+
+function UpcomingDealsSection() {
+  return (
+    <div className="rounded-xl border border-border/60 bg-card p-5">
+      <div className="mb-4 flex items-center justify-between">
+        <div>
+          <h3 className="text-sm font-semibold text-foreground">Prazos Próximos</h3>
+          <p className="text-xs text-muted-foreground">Negócios com vencimento nos próximos 7 dias</p>
+        </div>
+        {UPCOMING_DEALS.length > 0 && (
+          <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-500/20 px-1.5 text-[11px] font-bold text-amber-400">
+            {UPCOMING_DEALS.length}
+          </span>
+        )}
+      </div>
+      <DealsTable deals={UPCOMING_DEALS} />
+    </div>
+  )
+}
+
 export default function DashboardPage() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-8">
+      {/* Header */}
       <div>
         <h2 className="text-xl font-semibold text-foreground">Visão Geral</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Resumo do seu pipeline — dados reais chegam no M8.
+        <p className="mt-0.5 text-sm text-muted-foreground">
+          Resumo do pipeline — dados mockados (conecta ao Supabase no M8)
         </p>
       </div>
 
-      {/* Grid de métricas */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {METRIC_CARDS.map((card) => {
-          const Icon = card.icon
-          return (
-            <Card key={card.title}>
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <CardDescription>{card.title}</CardDescription>
-                  <Icon className="h-4 w-4 text-muted-foreground" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-bold text-foreground">{card.value}</p>
-                <div className="mt-1 flex items-center gap-1">
-                  <Badge variant={card.deltaPositive ? "success" : "destructive"}>
-                    {card.delta}
-                  </Badge>
-                  <span className="text-xs text-muted-foreground">{card.description}</span>
-                </div>
-              </CardContent>
-            </Card>
-          )
-        })}
-      </div>
+      {/* KPI Cards */}
+      <Suspense fallback={
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => <MetricCardSkeleton key={i} />)}
+        </div>
+      }>
+        <MetricsGrid />
+      </Suspense>
 
-      {/* Placeholder do gráfico */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Funil de Vendas</CardTitle>
-          <CardDescription>Distribuição de negócios por etapa do pipeline</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex h-48 items-center justify-center rounded-md border border-dashed border-border">
-            <p className="text-sm text-muted-foreground">Gráfico Recharts — implementado no M7</p>
+      {/* Funnel + Upcoming Deals */}
+      <div className="grid gap-6 xl:grid-cols-[1fr_1.1fr]">
+        <Suspense fallback={
+          <div className="rounded-xl border border-border/60 bg-card p-5">
+            <FunnelChartSkeleton />
           </div>
-        </CardContent>
-      </Card>
+        }>
+          <FunnelSection />
+        </Suspense>
+
+        <Suspense fallback={
+          <div className="rounded-xl border border-border/60 bg-card p-5">
+            <DealsTableSkeleton />
+          </div>
+        }>
+          <UpcomingDealsSection />
+        </Suspense>
+      </div>
     </div>
   )
 }

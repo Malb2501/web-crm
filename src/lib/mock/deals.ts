@@ -54,6 +54,7 @@ export const MOCK_DEALS: Deal[] = [
     stage: "new_lead",
     ownerId: "user-2",
     owner: BRUNO,
+    deadline: "2026-05-13",
     createdAt: "2026-05-07T11:00:00Z",
   },
 
@@ -94,6 +95,7 @@ export const MOCK_DEALS: Deal[] = [
     stage: "contacted",
     ownerId: "user-1",
     owner: ANA,
+    deadline: "2026-05-17",
     createdAt: "2026-04-28T15:00:00Z",
   },
   {
