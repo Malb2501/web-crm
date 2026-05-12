@@ -96,15 +96,15 @@
 
 ### Entregas
 
-- [ ] Criar grupo de rotas `src/app/(dashboard)/`
-- [ ] Layout `src/app/(dashboard)/layout.tsx` com sidebar + área de conteúdo
-- [ ] Componente `Sidebar` — logo, itens de navegação (Dashboard, Pipeline, Leads), rodapé com avatar do usuário
-- [ ] Componente `WorkspaceSwitcher` — dropdown com nome do workspace ativo (mockado)
-- [ ] Componente `UserMenu` — dropdown com "Configurações" e "Sair"
-- [ ] Rotas placeholder: `/dashboard`, `/pipeline`, `/leads`
-- [ ] Navegação ativa destacada na sidebar (item selecionado)
-- [ ] Sidebar recolhível em mobile (hambúrguer)
-- [ ] Testar navegação entre seções e comportamento mobile
+- [x] Criar grupo de rotas `src/app/(dashboard)/`
+- [x] Layout `src/app/(dashboard)/layout.tsx` com sidebar + área de conteúdo
+- [x] Componente `Sidebar` — logo, itens de navegação (Dashboard, Pipeline, Leads), rodapé com avatar do usuário
+- [x] Componente `WorkspaceSwitcher` — dropdown com nome do workspace ativo (mockado)
+- [x] Componente `UserMenu` — dropdown com "Configurações" e "Sair"
+- [x] Rotas placeholder: `/dashboard`, `/pipeline`, `/leads`
+- [x] Navegação ativa destacada na sidebar (item selecionado)
+- [x] Sidebar recolhível em mobile (hambúrguer)
+- [x] Testar navegação entre seções e comportamento mobile
 
 **Commit final:** `feat: authenticated app shell with sidebar and navigation`
 
@@ -117,17 +117,17 @@
 
 ### Entregas
 
-- [ ] Página `/leads` — tabela com colunas: nome, empresa, e-mail, status, responsável, data de criação
-- [ ] Componente `LeadTable` com paginação (10 itens/página)
-- [ ] Barra de ações: botão "Novo Lead" + campo de busca (UI apenas)
-- [ ] Componente `LeadForm` em modal/sheet — campos: nome, e-mail, telefone, empresa, cargo, status
-- [ ] Página `/leads/[id]` — perfil completo do lead
-  - [ ] Seção de dados cadastrais com botão "Editar"
-  - [ ] Seção "Negócios vinculados" (lista mockada)
-  - [ ] Componente `ActivityTimeline` — lista cronológica de atividades mockadas
-  - [ ] Formulário inline "Registrar atividade" (tipo, descrição, data)
-- [ ] Estados: empty state quando não há leads, skeleton loader
-- [ ] Testar listagem, abertura do modal e navegação para detalhe
+- [x] Página `/leads` — tabela com colunas: nome, empresa, e-mail, status, responsável, data de criação
+- [x] Componente `LeadTable` com paginação (10 itens/página)
+- [x] Barra de ações: botão "Novo Lead" + campo de busca funcional + filtros por status
+- [x] Componente `LeadForm` em modal/sheet — campos: nome, e-mail, telefone, empresa, cargo, status
+- [x] Página `/leads/[id]` — perfil completo do lead
+  - [x] Seção de dados cadastrais (editar via sheet acessível pela lista)
+  - [x] Seção "Negócios vinculados" (lista mockada)
+  - [x] Componente `ActivityTimeline` — lista cronológica de atividades mockadas
+  - [x] Formulário inline "Registrar atividade" (tipo, descrição)
+- [x] Estados: empty state quando não há leads ou filtro sem resultados
+- [x] Testar listagem, abertura do modal e navegação para detalhe
 
 **Commit final:** `feat: leads management UI (list, form, detail, activity timeline)`
 
