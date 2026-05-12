@@ -6,6 +6,7 @@ import { Plus } from "lucide-react"
 import type { Deal, DealStage } from "@/types"
 import { DealCard } from "./DealCard"
 import { STAGE_CONFIG } from "./StageBadge"
+import { cn } from "@/lib/utils"
 
 interface KanbanColumnProps {
   stage: DealStage
@@ -16,79 +17,102 @@ interface KanbanColumnProps {
 }
 
 function formatCurrency(value: number) {
-  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }).format(value)
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    maximumFractionDigits: 0,
+  }).format(value)
 }
 
 export function KanbanColumn({ stage, deals, index, onDealClick, onAddDeal }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: stage })
-  const cfg = STAGE_CONFIG[stage]
+  const cfg        = STAGE_CONFIG[stage]
   const totalValue = deals.reduce((sum, d) => sum + d.value, 0)
-
-  const isWon  = stage === "closed_won"
-  const isLost = stage === "closed_lost"
+  const isWon      = stage === "closed_won"
+  const isLost     = stage === "closed_lost"
 
   return (
     <div
-      className="kanban-column flex w-[272px] shrink-0 flex-col rounded-2xl border transition-colors duration-200"
+      className={cn(
+        "kanban-column flex w-[272px] shrink-0 flex-col rounded-xl border transition-colors duration-150",
+        isOver && "ring-1"
+      )}
       style={{
-        animationDelay: `${index * 80}ms`,
+        animationDelay: `${index * 70}ms`,
         background: isWon
           ? "rgba(34,197,94,0.04)"
           : isLost
-          ? "rgba(239,68,68,0.04)"
-          : "rgba(15,23,42,0.6)",
-        borderColor: isOver
-          ? cfg.border
-          : isWon
-          ? "rgba(34,197,94,0.18)"
-          : isLost
-          ? "rgba(239,68,68,0.18)"
-          : "rgba(51,65,85,0.6)",
-        boxShadow: isOver ? `0 0 0 2px ${cfg.border}` : undefined,
-      }}
+          ? "rgba(100,116,139,0.04)"
+          : "rgb(22 32 50 / 0.7)",
+        borderColor: isOver ? cfg.border : "rgba(51,65,85,0.55)",
+        "--tw-ring-color": cfg.border,
+      } as React.CSSProperties}
     >
-      {/* Column top accent */}
+      {/* Stage color bar */}
       <div
-        className="h-[3px] w-full rounded-t-2xl"
-        style={{ background: `linear-gradient(90deg, ${cfg.color}, ${cfg.color}88)` }}
+        className="h-[3px] w-full rounded-t-xl shrink-0"
+        style={{ background: cfg.color }}
       />
 
       {/* Header */}
-      <div className="flex items-start justify-between px-3 pt-3 pb-2">
-        <div>
+      <div className="flex items-start justify-between px-3 py-2.5">
+        <div className="min-w-0 flex-1 space-y-0.5">
+          {/* Stage name + count */}
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: cfg.color }}>
+            {/* Dot indicator */}
+            <span
+              className="h-2 w-2 shrink-0 rounded-full"
+              style={{ background: cfg.color }}
+            />
+            <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
               {cfg.label}
             </span>
+            {/* Count pill */}
             <span
-              className="flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[11px] font-bold tabular-nums"
-              style={{ background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}` }}
+              className="ml-auto flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[10px] font-bold tabular-nums"
+              style={{
+                background: `${cfg.color}1A`,
+                color: cfg.color,
+              }}
             >
               {deals.length}
             </span>
           </div>
-          <p className="mt-0.5 text-sm font-bold text-foreground tabular-nums">
+
+          {/* Total value */}
+          <p className="pl-4 text-[13px] font-semibold text-foreground tabular-nums">
             {formatCurrency(totalValue)}
           </p>
         </div>
 
+        {/* Add button */}
         <button
           onClick={() => onAddDeal(stage)}
-          className="flex h-7 w-7 items-center justify-center rounded-lg border border-border/60 bg-card/60 text-muted-foreground transition-all hover:border-[var(--stage-border)] hover:text-[var(--stage-color)] hover:bg-card"
-          style={{ "--stage-border": cfg.border, "--stage-color": cfg.color } as React.CSSProperties}
-          title="Novo negócio"
+          className={cn(
+            "ml-2 mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md",
+            "border border-border/60 text-muted-foreground",
+            "transition-all hover:border-[var(--c)] hover:text-[var(--c)] hover:bg-[var(--cbg)]"
+          )}
+          style={{ "--c": cfg.color, "--cbg": `${cfg.color}15` } as React.CSSProperties}
+          title="Adicionar negócio"
         >
-          <Plus className="h-3.5 w-3.5" />
+          <Plus className="h-3 w-3" />
         </button>
       </div>
 
-      {/* Drop zone */}
+      {/* Divider */}
+      <div className="mx-3 h-px bg-border/40" />
+
+      {/* Cards list */}
       <div
         ref={setNodeRef}
-        className="flex flex-1 flex-col gap-2 overflow-y-auto px-2 pb-3 scrollbar-thin"
-        style={{ minHeight: 80 }}
+        className="flex flex-1 flex-col gap-2 overflow-y-auto px-2 py-2.5 scrollbar-thin"
+        style={{ minHeight: 64 }}
       >
-        <SortableContext items={deals.map(d => d.id)} strategy={verticalListSortingStrategy}>
+        <SortableContext
+          items={deals.map(d => d.id)}
+          strategy={verticalListSortingStrategy}
+        >
           {deals.map(deal => (
             <DealCard key={deal.id} deal={deal} onClick={onDealClick} />
           ))}
@@ -96,10 +120,19 @@ export function KanbanColumn({ stage, deals, index, onDealClick, onAddDeal }: Ka
 
         {deals.length === 0 && (
           <div
-            className="flex flex-1 items-center justify-center rounded-xl border border-dashed py-8 text-xs text-muted-foreground/50"
-            style={{ borderColor: `${cfg.color}22` }}
+            className={cn(
+              "flex flex-1 flex-col items-center justify-center gap-1.5 rounded-lg",
+              "border border-dashed py-6 text-center",
+              isOver && "border-solid"
+            )}
+            style={{
+              borderColor: isOver ? cfg.color : `${cfg.color}25`,
+              background: isOver ? `${cfg.color}08` : "transparent",
+            }}
           >
-            Arraste cards aqui
+            <span className="text-[11px] text-muted-foreground/50">
+              {isOver ? "Soltar aqui" : "Sem negócios"}
+            </span>
           </div>
         )}
       </div>

@@ -2,7 +2,7 @@
 
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { CalendarDays, User2, Building2 } from "lucide-react"
+import { CalendarDays, Building2 } from "lucide-react"
 import type { Deal } from "@/types"
 import { STAGE_CONFIG } from "./StageBadge"
 import { cn } from "@/lib/utils"
@@ -14,7 +14,11 @@ interface DealCardProps {
 }
 
 function formatCurrency(value: number) {
-  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }).format(value)
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    maximumFractionDigits: 0,
+  }).format(value)
 }
 
 function isOverdue(deadline?: string) {
@@ -22,8 +26,20 @@ function isOverdue(deadline?: string) {
   return new Date(deadline) < new Date()
 }
 
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })
+function formatDeadline(dateStr: string) {
+  const d = new Date(dateStr)
+  const day = d.getDate().toString().padStart(2, "0")
+  const month = d.toLocaleString("pt-BR", { month: "short" }).replace(".", "")
+  return `${day} ${month}`
+}
+
+function initials(name: string) {
+  return name
+    .split(" ")
+    .slice(0, 2)
+    .map(w => w[0])
+    .join("")
+    .toUpperCase()
 }
 
 export function DealCard({ deal, onClick, isDragOverlay = false }: DealCardProps) {
@@ -36,13 +52,8 @@ export function DealCard({ deal, onClick, isDragOverlay = false }: DealCardProps
     isDragging,
   } = useSortable({ id: deal.id })
 
-  const cfg = STAGE_CONFIG[deal.stage]
+  const cfg    = STAGE_CONFIG[deal.stage]
   const overdue = isOverdue(deal.deadline)
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  }
 
   return (
     <div
@@ -51,69 +62,75 @@ export function DealCard({ deal, onClick, isDragOverlay = false }: DealCardProps
       {...listeners}
       onClick={() => !isDragging && onClick(deal)}
       className={cn(
-        "deal-card group relative rounded-xl border p-3 cursor-grab active:cursor-grabbing select-none",
-        "transition-all duration-200",
-        isDragging && "opacity-40 scale-[0.97]",
-        isDragOverlay && "shadow-2xl rotate-1 scale-105 cursor-grabbing opacity-100"
+        "deal-card group relative flex flex-col gap-2 rounded-lg border border-border/60",
+        "bg-card cursor-grab active:cursor-grabbing select-none",
+        "transition-all duration-150",
+        isDragging    && "opacity-30 scale-[0.98] shadow-none",
+        isDragOverlay && "opacity-100 scale-[1.02] shadow-xl cursor-grabbing"
       )}
       style={{
-        ...style,
-        background: "rgba(30, 41, 59, 0.75)",
-        backdropFilter: "blur(8px)",
-        borderColor: `rgba(51,65,85,0.8)`,
+        transform: CSS.Transform.toString(transform),
+        transition,
+        borderLeft: `3px solid ${cfg.color}`,
+        paddingLeft: "10px",
+        padding: "10px 10px 10px 11px",
         "--stage-color": cfg.color,
         "--stage-glow": cfg.glow,
-        "--stage-border": cfg.border,
       } as React.CSSProperties}
     >
-      {/* Top accent line */}
-      <div
-        className="absolute top-0 left-4 right-4 h-[2px] rounded-b-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-        style={{ background: cfg.color }}
-      />
-
       {/* Title */}
-      <p className="text-sm font-semibold text-foreground leading-tight mb-2 pr-2 line-clamp-2">
+      <p className="text-[13px] font-semibold leading-snug text-foreground line-clamp-2 pr-1">
         {deal.title}
       </p>
 
       {/* Lead / Company */}
       {deal.lead && (
-        <div className="flex items-center gap-1.5 mb-2">
-          <Building2 className="h-3 w-3 text-muted-foreground shrink-0" />
-          <span className="text-xs text-muted-foreground truncate">
+        <div className="flex items-center gap-1.5">
+          <Building2 className="h-3 w-3 shrink-0 text-muted-foreground/60" />
+          <span className="text-[11px] text-muted-foreground truncate">
             {deal.lead.company ?? deal.lead.name}
           </span>
         </div>
       )}
 
-      {/* Footer row */}
-      <div className="flex items-center justify-between mt-1 gap-2">
+      {/* Value + footer */}
+      <div className="flex items-center justify-between pt-0.5">
         {/* Value */}
         <span
-          className="text-sm font-bold tabular-nums"
+          className="text-sm font-bold tabular-nums tracking-tight"
           style={{ color: cfg.color }}
         >
           {formatCurrency(deal.value)}
         </span>
 
-        <div className="flex items-center gap-2">
-          {/* Deadline */}
+        <div className="flex items-center gap-1.5">
+          {/* Deadline badge */}
           {deal.deadline && (
-            <div className={cn("flex items-center gap-1", overdue ? "text-destructive" : "text-muted-foreground")}>
-              <CalendarDays className="h-3 w-3 shrink-0" />
-              <span className="text-xs font-medium">{formatDate(deal.deadline)}</span>
-            </div>
+            <span
+              className={cn(
+                "inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium",
+                overdue
+                  ? "bg-destructive/15 text-destructive"
+                  : "bg-muted text-muted-foreground"
+              )}
+            >
+              <CalendarDays className="h-2.5 w-2.5" />
+              {formatDeadline(deal.deadline)}
+            </span>
           )}
 
           {/* Owner avatar */}
           {deal.owner && (
             <div
-              className="flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold shrink-0"
-              style={{ background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}` }}
+              className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[9px] font-bold"
+              style={{
+                background: `${cfg.color}22`,
+                color: cfg.color,
+                outline: `1px solid ${cfg.color}55`,
+              }}
               title={deal.owner.name}
             >
-              {deal.owner.name.charAt(0)}
+              {initials(deal.owner.name)}
             </div>
           )}
         </div>

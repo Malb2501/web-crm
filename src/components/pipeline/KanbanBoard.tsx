@@ -12,7 +12,7 @@ import {
   type DragStartEvent,
 } from "@dnd-kit/core"
 import { arrayMove } from "@dnd-kit/sortable"
-import { Plus } from "lucide-react"
+import { Plus, Kanban, CircleDollarSign } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { Deal, DealStage } from "@/types"
 import { MOCK_DEALS } from "@/lib/mock/deals"
@@ -58,26 +58,24 @@ export function KanbanBoard() {
     const activeId = active.id as string
     const overId   = over.id as string
 
-    const activeDeal = deals.find(d => d.id === activeId)
-    if (!activeDeal) return
+    const deal = deals.find(d => d.id === activeId)
+    if (!deal) return
 
-    // Dropped onto a stage column
     if (STAGES.includes(overId as DealStage)) {
       const targetStage = overId as DealStage
-      if (activeDeal.stage !== targetStage) {
+      if (deal.stage !== targetStage) {
         setDeals(prev => prev.map(d => d.id === activeId ? { ...d, stage: targetStage } : d))
       }
       return
     }
 
-    // Dropped onto another card — reorder within or move across stages
     const overDeal = deals.find(d => d.id === overId)
     if (!overDeal) return
 
-    if (activeDeal.stage === overDeal.stage) {
+    if (deal.stage === overDeal.stage) {
       setDeals(prev => {
-        const stageDeals = prev.filter(d => d.stage === activeDeal.stage)
-        const others     = prev.filter(d => d.stage !== activeDeal.stage)
+        const stageDeals = prev.filter(d => d.stage === deal.stage)
+        const others     = prev.filter(d => d.stage !== deal.stage)
         const oldIdx     = stageDeals.findIndex(d => d.id === activeId)
         const newIdx     = stageDeals.findIndex(d => d.id === overId)
         return [...others, ...arrayMove(stageDeals, oldIdx, newIdx)]
@@ -85,10 +83,6 @@ export function KanbanBoard() {
     } else {
       setDeals(prev => prev.map(d => d.id === activeId ? { ...d, stage: overDeal.stage } : d))
     }
-  }
-
-  function handleAddDeal(stage: DealStage) {
-    setFormSheet({ open: true, stage })
   }
 
   function handleSaveDeal(deal: Deal) {
@@ -109,42 +103,56 @@ export function KanbanBoard() {
     setFormSheet({ open: true, deal })
   }
 
-  const totalValue = deals
-    .filter(d => d.stage !== "closed_lost")
-    .reduce((sum, d) => sum + d.value, 0)
+  // Metrics
+  const activeDeals  = deals.filter(d => d.stage !== "closed_lost")
+  const wonDeals     = deals.filter(d => d.stage === "closed_won")
+  const pipelineVal  = activeDeals.filter(d => d.stage !== "closed_won").reduce((s, d) => s + d.value, 0)
+  const wonVal       = wonDeals.reduce((s, d) => s + d.value, 0)
 
-  const totalFormatted = new Intl.NumberFormat("pt-BR", {
-    style: "currency", currency: "BRL", maximumFractionDigits: 0,
-  }).format(totalValue)
+  const fmt = (v: number) =>
+    new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }).format(v)
 
   return (
-    <div className="flex h-full flex-col">
-      {/* Toolbar */}
-      <div className="flex items-center justify-between px-1 pb-4">
+    <div className="flex h-full flex-col gap-4 min-h-0">
+
+      {/* ── Toolbar ─────────────────────────────────────────── */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between shrink-0">
         <div>
-          <h2 className="text-xl font-semibold text-foreground">Pipeline de Vendas</h2>
+          <h2 className="text-xl font-semibold tracking-tight text-foreground">
+            Pipeline de Vendas
+          </h2>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            {deals.filter(d => d.stage !== "closed_lost").length} negócios abertos&nbsp;&bull;&nbsp;{totalFormatted} em pipeline
+            {activeDeals.filter(d => d.stage !== "closed_won").length} negócios em andamento
           </p>
         </div>
-        <Button
-          size="sm"
-          onClick={() => setFormSheet({ open: true })}
-          className="gap-1.5"
-        >
-          <Plus className="h-4 w-4" />
-          Novo Negócio
-        </Button>
+
+        {/* Stats + CTA */}
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-1.5 rounded-lg border border-border/60 bg-card px-3 py-1.5">
+            <Kanban className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">Em pipeline</span>
+            <span className="text-sm font-semibold text-foreground tabular-nums">{fmt(pipelineVal)}</span>
+          </div>
+          <div className="flex items-center gap-1.5 rounded-lg border border-success/25 bg-success/5 px-3 py-1.5">
+            <CircleDollarSign className="h-3.5 w-3.5 text-success" />
+            <span className="text-xs text-muted-foreground">Ganho</span>
+            <span className="text-sm font-semibold text-success tabular-nums">{fmt(wonVal)}</span>
+          </div>
+          <Button size="sm" onClick={() => setFormSheet({ open: true })} className="gap-1.5 shrink-0">
+            <Plus className="h-4 w-4" />
+            Novo Negócio
+          </Button>
+        </div>
       </div>
 
-      {/* Board */}
+      {/* ── Board ───────────────────────────────────────────── */}
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex gap-3 overflow-x-auto pb-4">
+        <div className="kanban-board flex gap-3 overflow-x-auto pb-2 flex-1 min-h-0">
           {STAGES.map((stage, index) => (
             <KanbanColumn
               key={stage}
@@ -152,19 +160,22 @@ export function KanbanBoard() {
               deals={dealsByStage(stage)}
               index={index}
               onDealClick={setDetailDeal}
-              onAddDeal={handleAddDeal}
+              onAddDeal={(s) => setFormSheet({ open: true, stage: s })}
             />
           ))}
+
+          {/* Right breathing room */}
+          <div className="w-1 shrink-0" />
         </div>
 
-        <DragOverlay dropAnimation={{ duration: 180, easing: "cubic-bezier(0.18,0.67,0.6,1.22)" }}>
+        <DragOverlay dropAnimation={{ duration: 160, easing: "cubic-bezier(0.18,0.67,0.6,1.22)" }}>
           {activeDeal && (
             <DealCard deal={activeDeal} onClick={() => {}} isDragOverlay />
           )}
         </DragOverlay>
       </DndContext>
 
-      {/* Sheets */}
+      {/* ── Sheets ──────────────────────────────────────────── */}
       <DealFormSheet
         open={formSheet.open}
         defaultStage={formSheet.stage}
@@ -172,7 +183,6 @@ export function KanbanBoard() {
         onClose={() => setFormSheet({ open: false })}
         onSave={handleSaveDeal}
       />
-
       <DealDetailSheet
         deal={detailDeal}
         onClose={() => setDetailDeal(null)}
