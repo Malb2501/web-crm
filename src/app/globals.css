@@ -122,3 +122,39 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), Arial, sans-serif;
 }
+
+/* ─── Kanban Pipeline ────────────────────────────────────── */
+@keyframes columnSlideIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.kanban-column {
+  animation: columnSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Card hover — lift + subtle shadow in stage color */
+.deal-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px var(--stage-glow, rgba(0,0,0,0.2));
+  border-color: rgba(71,85,105,0.8) !important;
+}
+
+/* Thin scrollbar for kanban columns */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100,116,139,0.25) transparent;
+}
+.scrollbar-thin::-webkit-scrollbar       { width: 3px; }
+.scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+.scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(100,116,139,0.25); border-radius: 2px; }
+
+/* Hide horizontal scrollbar on board (keep scroll functionality) */
+.kanban-board::-webkit-scrollbar { height: 6px; }
+.kanban-board::-webkit-scrollbar-track { background: rgba(15,23,42,0.5); border-radius: 3px; }
+.kanban-board::-webkit-scrollbar-thumb { background: rgba(71,85,105,0.5); border-radius: 3px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .kanban-column { animation: none; }
+  .deal-card     { transition: none !important; }
+}
