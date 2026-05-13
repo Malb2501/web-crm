@@ -1,10 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { Suspense, useState, useTransition } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useSearchParams } from "next/navigation"
 import { Loader2 } from "lucide-react"
 import { AuthCard } from "@/components/auth/AuthCard"
+import { signUp } from "@/lib/actions/auth"
 import { cn } from "@/lib/utils"
 
 function isValidEmail(email: string) {
@@ -18,14 +19,17 @@ type FormErrors = {
   terms?: string
 }
 
-export default function SignupPage() {
-  const router = useRouter()
+function SignupForm() {
+  const searchParams = useSearchParams()
+  const serverError = searchParams.get("error")
+  const success = searchParams.get("success")
+
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [terms, setTerms] = useState(false)
   const [errors, setErrors] = useState<FormErrors>({})
-  const [loading, setLoading] = useState(false)
+  const [isPending, startTransition] = useTransition()
 
   function validate(): FormErrors {
     const e: FormErrors = {}
@@ -39,7 +43,7 @@ export default function SignupPage() {
     return e
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const errs = validate()
     if (Object.keys(errs).length > 0) {
@@ -47,9 +51,8 @@ export default function SignupPage() {
       return
     }
     setErrors({})
-    setLoading(true)
-    await new Promise((r) => setTimeout(r, 1500))
-    router.push("/onboarding")
+    const formData = new FormData(e.currentTarget)
+    startTransition(() => signUp(formData))
   }
 
   const passwordStrength =
@@ -68,6 +71,32 @@ export default function SignupPage() {
     : passwordStrength === "média" ? "w-2/3"
     : "w-full"
 
+  if (success === "check_email") {
+    return (
+      <AuthCard>
+        <div className="p-8 text-center">
+          <div className="mb-5">
+            <span className="text-2xl font-bold text-[#1E3A5F]">Pipe</span>
+            <span className="text-2xl font-bold text-[#2563EB]">Flow</span>
+          </div>
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
+            <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h1 className="text-lg font-semibold text-slate-800">Verifique seu e-mail</h1>
+          <p className="mt-2 text-sm text-slate-500">
+            Enviamos um link de confirmação para o seu e-mail.
+            Clique no link para ativar sua conta.
+          </p>
+          <Link href="/login" className="mt-6 block text-sm font-medium text-[#2563EB] hover:underline">
+            Voltar ao login
+          </Link>
+        </div>
+      </AuthCard>
+    )
+  }
+
   return (
     <AuthCard>
       <div className="p-8">
@@ -80,6 +109,12 @@ export default function SignupPage() {
           <p className="mt-1 text-sm text-slate-500">Comece a gerenciar seus clientes hoje</p>
         </div>
 
+        {serverError && (
+          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+            {serverError}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} noValidate className="space-y-4">
           <div>
             <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-slate-700">
@@ -87,6 +122,7 @@ export default function SignupPage() {
             </label>
             <input
               id="name"
+              name="name"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -106,6 +142,7 @@ export default function SignupPage() {
             </label>
             <input
               id="email"
+              name="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -125,6 +162,7 @@ export default function SignupPage() {
             </label>
             <input
               id="password"
+              name="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -168,10 +206,10 @@ export default function SignupPage() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={isPending}
             className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-[#2563EB] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#1d4ed8] disabled:cursor-not-allowed disabled:opacity-70"
           >
-            {loading ? (
+            {isPending ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Criando conta…
@@ -190,5 +228,13 @@ export default function SignupPage() {
         </p>
       </div>
     </AuthCard>
+  )
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={<AuthCard><div className="p-8 h-48" /></AuthCard>}>
+      <SignupForm />
+    </Suspense>
   )
 }

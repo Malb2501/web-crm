@@ -1,10 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { Suspense, useState, useTransition } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useSearchParams } from "next/navigation"
 import { Loader2 } from "lucide-react"
 import { AuthCard } from "@/components/auth/AuthCard"
+import { signIn } from "@/lib/actions/auth"
 import { cn } from "@/lib/utils"
 
 function isValidEmail(email: string) {
@@ -13,12 +14,14 @@ function isValidEmail(email: string) {
 
 type FormErrors = { email?: string; password?: string }
 
-export default function LoginPage() {
-  const router = useRouter()
+function LoginForm() {
+  const searchParams = useSearchParams()
+  const serverError = searchParams.get("error")
+
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [errors, setErrors] = useState<FormErrors>({})
-  const [loading, setLoading] = useState(false)
+  const [isPending, startTransition] = useTransition()
 
   function validate(): FormErrors {
     const e: FormErrors = {}
@@ -29,7 +32,7 @@ export default function LoginPage() {
     return e
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const errs = validate()
     if (Object.keys(errs).length > 0) {
@@ -37,9 +40,8 @@ export default function LoginPage() {
       return
     }
     setErrors({})
-    setLoading(true)
-    await new Promise((r) => setTimeout(r, 1500))
-    router.push("/dashboard")
+    const formData = new FormData(e.currentTarget)
+    startTransition(() => signIn(formData))
   }
 
   return (
@@ -54,6 +56,12 @@ export default function LoginPage() {
           <p className="mt-1 text-sm text-slate-500">Entre na sua conta para continuar</p>
         </div>
 
+        {serverError && (
+          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+            {serverError}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} noValidate className="space-y-4">
           <div>
             <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-slate-700">
@@ -61,6 +69,7 @@ export default function LoginPage() {
             </label>
             <input
               id="email"
+              name="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -80,6 +89,7 @@ export default function LoginPage() {
             </label>
             <input
               id="password"
+              name="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -100,10 +110,10 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={isPending}
             className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-[#2563EB] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#1d4ed8] disabled:cursor-not-allowed disabled:opacity-70"
           >
-            {loading ? (
+            {isPending ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Entrando…
@@ -122,5 +132,13 @@ export default function LoginPage() {
         </p>
       </div>
     </AuthCard>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<AuthCard><div className="p-8 h-48" /></AuthCard>}>
+      <LoginForm />
+    </Suspense>
   )
 }

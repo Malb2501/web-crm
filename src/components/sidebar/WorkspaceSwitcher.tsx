@@ -11,27 +11,38 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import type { WorkspaceWithPlan } from "@/lib/data/workspaces"
 
-const MOCK_WORKSPACES = [
-  { id: "1", name: "Acme Corp",       plan: "pro"  as const, color: "#2563EB" },
-  { id: "2", name: "Freelance",       plan: "free" as const, color: "#16A34A" },
-  { id: "3", name: "Consultoria XYZ", plan: "free" as const, color: "#D97706" },
+const AVATAR_COLORS = [
+  "#2563EB", "#16A34A", "#D97706", "#7C3AED", "#DB2777", "#0891B2",
 ]
 
-function WorkspaceAvatar({ name, color }: { name: string; color: string }) {
+function workspaceColor(id: string) {
+  let hash = 0
+  for (let i = 0; i < id.length; i++) hash = id.charCodeAt(i) + ((hash << 5) - hash)
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]
+}
+
+function WorkspaceAvatar({ name, id }: { name: string; id: string }) {
   return (
     <div
       className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-xs font-bold text-white"
-      style={{ backgroundColor: color }}
+      style={{ backgroundColor: workspaceColor(id) }}
     >
-      {name.charAt(0)}
+      {name.charAt(0).toUpperCase()}
     </div>
   )
 }
 
-export function WorkspaceSwitcher() {
-  const [activeId, setActiveId] = useState("1")
-  const active = MOCK_WORKSPACES.find((w) => w.id === activeId)!
+interface WorkspaceSwitcherProps {
+  workspaces: WorkspaceWithPlan[]
+}
+
+export function WorkspaceSwitcher({ workspaces }: WorkspaceSwitcherProps) {
+  const [activeId, setActiveId] = useState(workspaces[0]?.id ?? "")
+  const active = workspaces.find((w) => w.id === activeId) ?? workspaces[0]
+
+  if (!active) return null
 
   return (
     <DropdownMenu>
@@ -45,7 +56,7 @@ export function WorkspaceSwitcher() {
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
           )}
         >
-          <WorkspaceAvatar name={active.name} color={active.color} />
+          <WorkspaceAvatar name={active.name} id={active.id} />
           <div className="flex min-w-0 flex-1 flex-col">
             <span className="truncate text-sm font-semibold leading-none text-sidebar-foreground">
               {active.name}
@@ -71,13 +82,13 @@ export function WorkspaceSwitcher() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
 
-        {MOCK_WORKSPACES.map((ws) => (
+        {workspaces.map((ws) => (
           <DropdownMenuItem
             key={ws.id}
             onClick={() => setActiveId(ws.id)}
             className="gap-2.5 cursor-pointer"
           >
-            <WorkspaceAvatar name={ws.name} color={ws.color} />
+            <WorkspaceAvatar name={ws.name} id={ws.id} />
             <div className="flex min-w-0 flex-1 flex-col">
               <span className="truncate text-sm font-medium">{ws.name}</span>
               <span className="text-xs text-muted-foreground capitalize">{ws.plan}</span>

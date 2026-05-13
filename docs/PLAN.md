@@ -208,16 +208,40 @@
 - [x] Trigger `on_workspace_created` → cria subscription Free automaticamente
 - [x] Tipos TypeScript em `src/types/supabase.ts` (Database, Tables, InsertDTO, UpdateDTO)
 - [x] Clientes Supabase tipados com `Database` em `client.ts` e `server.ts`
-- [ ] Middleware Next.js para proteger rotas do grupo `(dashboard)`
-- [ ] Conectar formulários de login e cadastro ao Supabase Auth
-- [ ] Redirecionar após login para `/dashboard`, após logout para `/login`
-- [ ] Criar workspace automaticamente no primeiro login (trigger ou Server Action)
-- [ ] Testar login, logout, e proteção de rota no browser
+- [x] Middleware Next.js para proteger rotas do grupo `(dashboard)`
+- [x] Conectar formulários de login e cadastro ao Supabase Auth
+- [x] Redirecionar após login para `/dashboard`, após logout para `/login`
+- [x] Criar workspace automaticamente no primeiro login (Server Action `createWorkspace`)
+- [x] Testar login, logout, e proteção de rota no browser
 
 **Commits entregues:**
 - `feat: Supabase core setup — clients, packages, and env (aula 3.1)` — b8df224
 - `feat: database schema, RLS policies, and TypeScript types (aula 3.2)` — 9103ad0
 - PR #2 mergeado em master — cb2a214
+- `feat: auth real, proteção de rotas e workspace creation (aula 3.3)`
+
+**Arquivos criados/modificados na aula 3.3:**
+- `src/proxy.ts` — proteção de rotas Next.js 16 (renomeado de middleware.ts)
+- `src/app/auth/callback/route.ts` — troca code por sessão após confirmação de e-mail
+- `src/lib/actions/auth.ts` — Server Actions: `signIn`, `signUp`, `signOut`
+- `src/lib/actions/workspace.ts` — Server Action: `createWorkspace` (insere workspace + membro admin)
+- `src/lib/data/workspaces.ts` — helpers de leitura: `getUserWorkspaces`, `getCurrentUser`
+- `src/lib/supabase/server.ts` — tipagem explícita com `TypedSupabaseClient`
+- `src/app/(auth)/login/page.tsx` — conectado ao `signIn`, Suspense boundary
+- `src/app/(auth)/signup/page.tsx` — conectado ao `signUp`, tela de "verifique seu e-mail"
+- `src/app/onboarding/page.tsx` — conectado ao `createWorkspace`, Suspense boundary
+- `src/app/(dashboard)/layout.tsx` — Server Component, busca user + workspaces
+- `src/components/layout/DashboardShell.tsx` — Client Component com estado do sidebar
+- `src/components/sidebar/Sidebar.tsx` — recebe workspaces/user via props
+- `src/components/sidebar/WorkspaceSwitcher.tsx` — dados reais via props
+- `src/components/sidebar/UserMenu.tsx` — nome/email reais, logout via `signOut`
+- `supabase/migrations/002_rls_performance.sql` — melhorias de RLS (best practices):
+  - Funções helper `is_workspace_member` e `is_workspace_admin` com SECURITY DEFINER
+  - Políticas reescritas usando funções (auth.uid() avaliado 1x por query, não por linha)
+  - Index `workspace_members_user_id_idx` em `(user_id, workspace_id)`
+  - Indexes compostos `leads_workspace_status_idx` e `deals_workspace_stage_idx`
+  - Index parcial `deals_deadline_idx` para queries de prazo no dashboard
+  - Correção de bug: policy de insert em workspace_members impedia auto-inserção do criador
 
 ---
 

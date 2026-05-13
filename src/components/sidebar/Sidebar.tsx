@@ -6,6 +6,7 @@ import { LayoutDashboard, KanbanSquare, Users, X, Settings } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher"
 import { UserMenu } from "./UserMenu"
+import type { WorkspaceWithPlan } from "@/lib/data/workspaces"
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -20,6 +21,9 @@ const BOTTOM_ITEMS = [
 interface SidebarProps {
   open: boolean
   onClose: () => void
+  workspaces: WorkspaceWithPlan[]
+  userName: string
+  userEmail: string
 }
 
 function NavItem({
@@ -47,7 +51,6 @@ function NavItem({
             : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground"
         )}
       >
-        {/* Active indicator — left accent bar */}
         <span
           className={cn(
             "absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-accent transition-all",
@@ -62,7 +65,7 @@ function NavItem({
   )
 }
 
-export function Sidebar({ open, onClose }: SidebarProps) {
+export function Sidebar({ open, onClose, workspaces, userName, userEmail }: SidebarProps) {
   const pathname = usePathname()
 
   const isActive = (href: string) =>
@@ -70,7 +73,6 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
   return (
     <>
-      {/* Overlay mobile */}
       {open && (
         <div
           className="fixed inset-0 z-20 bg-black/60 backdrop-blur-sm lg:hidden"
@@ -79,7 +81,6 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         />
       )}
 
-      {/* Painel da sidebar */}
       <aside
         className={cn(
           "fixed inset-y-0 left-0 z-30 flex w-64 flex-col",
@@ -89,7 +90,6 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           open ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        {/* ── Cabeçalho: logo + fechar (mobile) ── */}
         <div className="flex h-14 shrink-0 items-center justify-between border-b border-sidebar-border px-4">
           <div className="flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-md bg-accent">
@@ -109,12 +109,10 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           </button>
         </div>
 
-        {/* ── Workspace Switcher ── */}
         <div className="border-b border-sidebar-border px-3 py-3">
-          <WorkspaceSwitcher />
+          <WorkspaceSwitcher workspaces={workspaces} />
         </div>
 
-        {/* ── Navegação principal ── */}
         <nav className="flex-1 overflow-y-auto px-3 py-4">
           <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/30">
             Menu
@@ -130,7 +128,6 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             ))}
           </ul>
 
-          {/* Seção inferior de nav */}
           <p className="mb-2 mt-6 px-3 text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/30">
             Conta
           </p>
@@ -146,9 +143,8 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           </ul>
         </nav>
 
-        {/* ── Rodapé: usuário ── */}
         <div className="border-t border-sidebar-border px-3 py-3">
-          <UserMenu />
+          <UserMenu name={userName} email={userEmail} />
         </div>
       </aside>
     </>
