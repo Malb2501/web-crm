@@ -8,13 +8,14 @@ export async function getActiveWorkspaceId(): Promise<string | null> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('workspace_members')
     .select('workspace_id')
     .eq('user_id', user.id)
     .limit(1)
-    .single()
+    .maybeSingle()
 
+  if (error) return null
   return data?.workspace_id ?? null
 }
 

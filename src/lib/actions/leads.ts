@@ -34,7 +34,7 @@ export async function createLead(formData: {
     .from('subscriptions')
     .select('plan')
     .eq('workspace_id', workspaceId)
-    .single()
+    .maybeSingle()
 
   if ((sub?.plan ?? 'free') === 'free' && (count ?? 0) >= 50) {
     return { success: false, error: 'Limite de 50 leads atingido no plano Free' }

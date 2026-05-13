@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useTransition } from "react"
+import { useState, useCallback, useTransition, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import {
   DndContext,
@@ -44,7 +44,12 @@ export function KanbanBoard({ initialDeals, availableLeads }: KanbanBoardProps) 
   const [activeId, setActiveId] = useState<string | null>(null)
   const [formSheet, setFormSheet] = useState<{ open: boolean; stage?: DealStage; deal?: Deal }>({ open: false })
   const [detailDeal, setDetailDeal] = useState<Deal | null>(null)
+  const [dealError, setDealError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+
+  useEffect(() => {
+    setDeals(initialDeals)
+  }, [initialDeals])
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
@@ -106,6 +111,7 @@ export function KanbanBoard({ initialDeals, availableLeads }: KanbanBoardProps) 
   }
 
   function handleSaveDeal(deal: Deal) {
+    setDealError(null)
     startTransition(async () => {
       if (deal.id.startsWith("deal-new-")) {
         const result = await createDeal({
@@ -116,12 +122,13 @@ export function KanbanBoard({ initialDeals, availableLeads }: KanbanBoardProps) 
           ownerId: deal.ownerId,
           deadline: deal.deadline ?? "",
         })
-        if (result.success) {
-          setDeals(prev => [{ ...deal, id: result.id }, ...prev])
-          router.refresh()
+        if (!result.success) {
+          setDealError(result.error)
+          return
         }
+        setDeals(prev => [{ ...deal, id: result.id }, ...prev])
       } else {
-        await updateDeal(deal.id, {
+        const result = await updateDeal(deal.id, {
           title: deal.title,
           leadId: deal.leadId ?? "",
           value: deal.value,
@@ -129,11 +136,15 @@ export function KanbanBoard({ initialDeals, availableLeads }: KanbanBoardProps) 
           ownerId: deal.ownerId,
           deadline: deal.deadline ?? "",
         })
+        if (!result.success) {
+          setDealError(result.error)
+          return
+        }
         setDeals(prev => prev.map(d => d.id === deal.id ? deal : d))
-        router.refresh()
       }
+      setFormSheet({ open: false })
+      router.refresh()
     })
-    setFormSheet({ open: false })
   }
 
   function handleDeleteDeal(id: string) {
@@ -202,6 +213,13 @@ export function KanbanBoard({ initialDeals, availableLeads }: KanbanBoardProps) 
           </Button>
         </div>
       </div>
+
+      {/* ── Erro de ação ────────────────────────────────────── */}
+      {dealError && (
+        <div className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-2.5 text-sm text-destructive shrink-0">
+          {dealError}
+        </div>
+      )}
 
       {/* ── Board ───────────────────────────────────────────── */}
       <DndContext

@@ -64,7 +64,7 @@ export async function getDashboardMetrics(): Promise<DashboardMetrics> {
     d.stage !== 'closed_won' && d.stage !== 'closed_lost'
   ).length
   const pipelineValue = deals
-    .filter(d => d.stage !== 'closed_lost')
+    .filter(d => d.stage !== 'closed_lost' && d.stage !== 'closed_won')
     .reduce((s, d) => s + d.value, 0)
 
   const converted = leads.filter(l => l.status === 'converted').length
@@ -126,7 +126,7 @@ export async function getUpcomingDeals(): Promise<UpcomingDeal[]> {
     .not('deadline', 'is', null)
     .gte('deadline', today.toISOString().split('T')[0])
     .lte('deadline', in7days.toISOString().split('T')[0])
-    .not('stage', 'in', '("closed_won","closed_lost")')
+    .not('stage', 'in', '(closed_won,closed_lost)')
     .order('deadline', { ascending: true })
 
   if (error || !data) return []

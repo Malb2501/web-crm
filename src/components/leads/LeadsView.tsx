@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useState, useTransition, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Plus, Search, ChevronLeft, ChevronRight, Pencil, Users } from "lucide-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -42,6 +42,11 @@ export function LeadsView({ initialLeads }: LeadsViewProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [leads, setLeads] = useState<Lead[]>(initialLeads)
+
+  useEffect(() => {
+    setLeads(initialLeads)
+  }, [initialLeads])
+
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState<LeadStatus | "all">("all")
   const [page, setPage] = useState(1)

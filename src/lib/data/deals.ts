@@ -21,7 +21,10 @@ export async function getDeals(): Promise<DealWithLead[]> {
   if (error || !data) return []
 
   return data.map(row => {
-    const lead = row.leads as { id: string; name: string; company: string | null } | null
+    const rawLead = row.leads
+    const lead = Array.isArray(rawLead)
+      ? (rawLead[0] as { id: string; name: string; company: string | null } | undefined) ?? null
+      : rawLead as { id: string; name: string; company: string | null } | null
     return {
       id: row.id,
       workspaceId: row.workspace_id,
