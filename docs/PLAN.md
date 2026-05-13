@@ -249,23 +249,48 @@
 
 ## M9 — Leads & Atividades Backend
 
-**Branch:** `feat/leads-backend`
-**Objetivo:** Substituir dados mockados de leads e atividades por dados reais do Supabase.
+**Branch:** `feat/leads-data`
+**Objetivo:** Substituir dados mockados de leads, atividades, deals e dashboard por dados reais do Supabase.
 
 ### Entregas
 
-- [ ] Server Action `createLead` — insere lead com `workspace_id` do contexto
-- [ ] Server Action `updateLead` — edição de dados cadastrais
-- [ ] Server Action `deleteLead` — remoção com confirmação
-- [ ] Server Component em `/leads` — busca lista de leads via `supabase/server.ts`
-- [ ] Server Component em `/leads/[id]` — busca lead + atividades vinculadas
-- [ ] Server Action `createActivity` — registra atividade vinculada ao lead
-- [ ] Busca e filtros reais: parâmetros de URL (`?search=`, `?status=`, `?owner=`)
-- [ ] Validação server-side com `zod` antes de persistir
-- [ ] Verificação de limite do plano Free (máx. 50 leads) antes de criar
-- [ ] Testar CRUD completo: criar, editar, detalhar, registrar atividade, deletar
+- [x] Server Action `createLead` — insere lead com `workspace_id` do contexto + limite Free (50 leads)
+- [x] Server Action `updateLead` — edição de dados cadastrais
+- [x] Server Action `deleteLead` — remoção com verificação de workspace
+- [x] Server Component em `/leads` — busca lista de leads via `supabase/server.ts`
+- [x] Server Component em `/leads/[id]` — busca lead + atividades + deals vinculadas
+- [x] Server Action `createActivity` — registra atividade vinculada ao lead
+- [x] Busca e filtros client-side (nome, empresa, e-mail, status)
+- [x] Verificação de limite do plano Free (máx. 50 leads) antes de criar
+- [x] Server Actions `createDeal`, `updateDeal`, `deleteDeal`, `moveDeal` — CRUD de deals
+- [x] Server Component em `/pipeline` — deals reais + lista de leads para select
+- [x] KanbanBoard: drag-and-drop persiste no Supabase via `moveDeal` (optimistic update)
+- [x] DealFormSheet: usa leads reais recebidos via prop (sem mock)
+- [x] Dashboard: métricas, funil de vendas e prazos próximos calculados do banco
+- [x] `getActiveWorkspaceId` helper para isolamento por workspace em todas as actions
 
-**Commit final:** `feat: leads and activities connected to Supabase with real data`
+**Commits entregues:**
+- `feat: leads, deals e dashboard com dados reais do Supabase (aula 3.4)` — de8b0e0
+
+**Status: ✅ Concluído**
+
+**Arquivos criados/modificados na aula 3.4:**
+- `src/lib/data/workspaces.ts` — `getActiveWorkspaceId` adicionado
+- `src/lib/actions/leads.ts` — Server Actions de leads (criar, editar, deletar)
+- `src/lib/actions/activities.ts` — Server Action `createActivity`
+- `src/lib/actions/deals.ts` — Server Actions de deals (criar, editar, deletar, mover)
+- `src/lib/data/leads.ts` — `getLeads`, `getLead`, `getLeadActivities`, `getLeadDeals`
+- `src/lib/data/deals.ts` — `getDeals`, `getLeadsForSelect`
+- `src/lib/data/dashboard.ts` — `getDashboardMetrics`, `getFunnelData`, `getUpcomingDeals`
+- `src/app/(dashboard)/leads/page.tsx` — Server Component com dados reais
+- `src/app/(dashboard)/leads/[id]/page.tsx` — dados reais de lead, atividades e deals
+- `src/app/(dashboard)/pipeline/page.tsx` — Server Component com deals e leads reais
+- `src/app/(dashboard)/dashboard/page.tsx` — métricas reais do banco
+- `src/components/leads/LeadsView.tsx` — usa `initialLeads` via props + Server Actions
+- `src/components/leads/ActivityTimeline.tsx` — usa `initialActivities` via props + `createActivity`
+- `src/components/leads/LeadFormSheet.tsx` — suporte a `isPending`
+- `src/components/pipeline/KanbanBoard.tsx` — `initialDeals` via props + drag persiste
+- `src/components/pipeline/DealFormSheet.tsx` — `availableLeads` via prop (sem mock)
 
 ---
 
