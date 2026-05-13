@@ -218,7 +218,9 @@
 - `feat: Supabase core setup — clients, packages, and env (aula 3.1)` — b8df224
 - `feat: database schema, RLS policies, and TypeScript types (aula 3.2)` — 9103ad0
 - PR #2 mergeado em master — cb2a214
-- `feat: auth real, proteção de rotas e workspace creation (aula 3.3)`
+- `feat: auth real, proteção de rotas e criação de workspace (aula 3.3)` — e5698f3
+
+**Status: ✅ Concluído**
 
 **Arquivos criados/modificados na aula 3.3:**
 - `src/proxy.ts` — proteção de rotas Next.js 16 (renomeado de middleware.ts)
