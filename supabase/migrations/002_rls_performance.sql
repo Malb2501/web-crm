@@ -103,22 +103,14 @@ create policy "workspace_members: members can read"
   using (is_workspace_member(workspace_id));
 
 -- Inserção: admin adiciona outros membros OU usuário se auto-insere
--- como primeiro membro (criação do workspace)
 create policy "workspace_members: admin can insert"
   on workspace_members for insert
   with check (
-    -- Caso 1: é admin do workspace (convida outros)
+    -- Caso 1: já é admin do workspace (convida outros)
     is_workspace_admin(workspace_members.workspace_id)
     or
-    -- Caso 2: usuário se auto-insere E é o único membro (criação)
-    (
-      workspace_members.user_id = (select auth.uid())
-      and not exists (
-        select 1 from public.workspace_members existing
-        where existing.workspace_id = workspace_members.workspace_id
-          and existing.user_id != (select auth.uid())
-      )
-    )
+    -- Caso 2: usuário se auto-insere (criação do workspace)
+    workspace_members.user_id = (select auth.uid())
   );
 
 create policy "workspace_members: admin can update role"
@@ -244,3 +236,31 @@ create index if not exists deals_workspace_stage_idx
 create index if not exists deals_deadline_idx
   on deals (deadline)
   where deadline is not null;
+
+-- ────────────────────────────────────────────────────────────
+-- 10. RPC: create_workspace_for_user
+--
+-- SECURITY DEFINER para bypassar RLS no onboarding.
+-- Cria workspace + membro admin em uma transação atômica.
+-- Chamada pelo Server Action em src/lib/actions/workspace.ts
+-- ────────────────────────────────────────────────────────────
+create or replace function create_workspace_for_user(p_name text, p_slug text)
+returns uuid
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_workspace_id uuid;
+begin
+  insert into public.workspaces (name, slug, plan)
+  values (p_name, p_slug, 'free')
+  returning id into v_workspace_id;
+
+  insert into public.workspace_members (workspace_id, user_id, role)
+  values (v_workspace_id, auth.uid(), 'admin');
+
+  return v_workspace_id;
+end;
+$$;
+

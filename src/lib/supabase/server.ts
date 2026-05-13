@@ -13,16 +13,21 @@ export async function getSupabaseServerClient(): Promise<TypedSupabaseClient> {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() {
-          return cookieStore.getAll()
+        get(name) {
+          return cookieStore.get(name)?.value
         },
-        setAll(cookiesToSet) {
+        set(name, value, options) {
           try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            )
+            cookieStore.set({ name, value, ...options })
           } catch {
-            // Server Components não podem setar cookies — o middleware cuida disso
+            // Server Components não podem setar cookies — o proxy cuida disso
+          }
+        },
+        remove(name, options) {
+          try {
+            cookieStore.set({ name, value: '', ...options })
+          } catch {
+            // Server Components não podem setar cookies — o proxy cuida disso
           }
         },
       },

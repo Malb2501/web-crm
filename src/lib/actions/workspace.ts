@@ -2,7 +2,6 @@
 
 import { redirect } from 'next/navigation'
 import { getSupabaseServerClient } from '@/lib/supabase/server'
-import type { InsertDTO } from '@/types/supabase'
 
 function toSlug(name: string) {
   return name
@@ -28,26 +27,15 @@ export async function createWorkspace(formData: FormData) {
     redirect('/login')
   }
 
-  const baseSlug = toSlug(name)
-  const slug = `${baseSlug}-${Date.now().toString(36)}`
+  const slug = `${toSlug(name)}-${Date.now().toString(36)}`
 
-  const wsInsert: InsertDTO<'workspaces'> = { name, slug, plan: 'free' }
-  const { data: workspace, error: wsError } = await supabase
-    .from('workspaces')
-    .insert(wsInsert)
-    .select('id')
-    .single()
+  const { error } = await supabase.rpc('create_workspace_for_user', {
+    p_name: name,
+    p_slug: slug,
+  })
 
-  if (wsError || !workspace) {
+  if (error) {
     redirect('/onboarding?error=Erro+ao+criar+workspace')
-  }
-
-  const { error: memberError } = await supabase
-    .from('workspace_members')
-    .insert({ workspace_id: workspace.id, user_id: user.id, role: 'admin' })
-
-  if (memberError) {
-    redirect('/onboarding?error=Erro+ao+configurar+workspace')
   }
 
   redirect('/dashboard')
