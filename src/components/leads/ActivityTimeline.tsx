@@ -1,11 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useTransition } from "react"
 import { Phone, Mail, Users, FileText, Plus, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { MOCK_ACTIVITIES } from "@/lib/mock/leads"
+import { createActivity } from "@/lib/actions/activities"
 import type { Activity, ActivityType } from "@/types"
 
 type ActivityConfig = {
@@ -43,37 +43,54 @@ function initials(name: string) {
   return name.split(" ").slice(0, 2).map(n => n[0]).join("").toUpperCase()
 }
 
-export function ActivityTimeline({ leadId }: { leadId: string }) {
-  const initial = MOCK_ACTIVITIES
-    .filter(a => a.leadId === leadId)
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+interface ActivityTimelineProps {
+  leadId: string
+  initialActivities: Activity[]
+}
 
-  const [activities, setActivities] = useState<Activity[]>(initial)
+export function ActivityTimeline({ leadId, initialActivities }: ActivityTimelineProps) {
+  const [activities, setActivities] = useState<Activity[]>(initialActivities)
   const [isAdding, setIsAdding] = useState(false)
   const [newType, setNewType] = useState<ActivityType>("call")
   const [newDesc, setNewDesc] = useState("")
   const [descError, setDescError] = useState("")
+  const [serverError, setServerError] = useState("")
+  const [isPending, startTransition] = useTransition()
 
   const handleSave = () => {
     if (!newDesc.trim()) {
       setDescError("Descrição é obrigatória")
       return
     }
-    const activity: Activity = {
-      id: `act-${Date.now()}`,
-      leadId,
-      workspaceId: "ws-1",
-      type: newType,
-      description: newDesc.trim(),
-      authorId: "user-1",
-      author: { id: "user-1", name: "Ana Silva", email: "ana@pipeflow.com" },
-      createdAt: new Date().toISOString(),
-    }
-    setActivities(prev => [activity, ...prev])
-    setNewDesc("")
-    setNewType("call")
-    setIsAdding(false)
     setDescError("")
+    setServerError("")
+
+    startTransition(async () => {
+      const result = await createActivity({
+        leadId,
+        type: newType,
+        description: newDesc.trim(),
+      })
+
+      if (!result.success) {
+        setServerError(result.error)
+        return
+      }
+
+      const optimistic: Activity = {
+        id: result.id,
+        leadId,
+        workspaceId: "",
+        type: newType,
+        description: newDesc.trim(),
+        authorId: "",
+        createdAt: new Date().toISOString(),
+      }
+      setActivities(prev => [optimistic, ...prev])
+      setNewDesc("")
+      setNewType("call")
+      setIsAdding(false)
+    })
   }
 
   const handleCancel = () => {
@@ -81,6 +98,7 @@ export function ActivityTimeline({ leadId }: { leadId: string }) {
     setNewDesc("")
     setNewType("call")
     setDescError("")
+    setServerError("")
   }
 
   return (
@@ -156,18 +174,22 @@ export function ActivityTimeline({ leadId }: { leadId: string }) {
               }}
               placeholder="Descreva o que aconteceu..."
               className="min-h-[80px] text-sm"
+              disabled={isPending}
             />
             {descError && (
               <p className="text-xs text-destructive">{descError}</p>
             )}
+            {serverError && (
+              <p className="text-xs text-destructive">{serverError}</p>
+            )}
           </div>
 
           <div className="flex justify-end gap-2">
-            <Button variant="outline" size="sm" onClick={handleCancel}>
+            <Button variant="outline" size="sm" onClick={handleCancel} disabled={isPending}>
               Cancelar
             </Button>
-            <Button size="sm" onClick={handleSave}>
-              Salvar
+            <Button size="sm" onClick={handleSave} disabled={isPending}>
+              {isPending ? "Salvando..." : "Salvar"}
             </Button>
           </div>
         </div>

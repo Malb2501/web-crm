@@ -3,6 +3,21 @@ import type { WorkspaceRow } from '@/types/supabase'
 
 export type WorkspaceWithPlan = Pick<WorkspaceRow, 'id' | 'name' | 'plan'>
 
+export async function getActiveWorkspaceId(): Promise<string | null> {
+  const supabase = await getSupabaseServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+
+  const { data } = await supabase
+    .from('workspace_members')
+    .select('workspace_id')
+    .eq('user_id', user.id)
+    .limit(1)
+    .single()
+
+  return data?.workspace_id ?? null
+}
+
 export async function getUserWorkspaces(): Promise<WorkspaceWithPlan[]> {
   const supabase = await getSupabaseServerClient()
   const { data: { user } } = await supabase.auth.getUser()

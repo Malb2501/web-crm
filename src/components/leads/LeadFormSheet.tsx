@@ -31,6 +31,7 @@ interface LeadFormSheetProps {
   onClose: () => void
   onSubmit: (data: LeadFormData) => void
   onDelete?: (id: string) => void
+  isPending?: boolean
 }
 
 export function LeadFormSheet({
@@ -39,6 +40,7 @@ export function LeadFormSheet({
   onClose,
   onSubmit,
   onDelete,
+  isPending = false,
 }: LeadFormSheetProps) {
   const [form, setForm] = useState<LeadFormData>(EMPTY_FORM)
   const [errors, setErrors] = useState<Partial<Record<keyof LeadFormData, string>>>({})
@@ -227,8 +229,8 @@ export function LeadFormSheet({
               </div>
             ) : (
               <div className="flex gap-2">
-                <Button type="submit" className="flex-1">
-                  {isEditing ? "Salvar alterações" : "Criar lead"}
+                <Button type="submit" className="flex-1" disabled={isPending}>
+                  {isPending ? "Salvando..." : isEditing ? "Salvar alterações" : "Criar lead"}
                 </Button>
                 {isEditing && onDelete && (
                   <Button
