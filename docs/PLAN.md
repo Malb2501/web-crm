@@ -339,23 +339,34 @@
 
 ## M12 — Monetização
 
-**Branch:** `feat/stripe`
+**Branch:** `feat/billing`
 **Objetivo:** Planos Free e Pro funcionais com Stripe Checkout, webhook e Customer Portal.
 
 ### Entregas
 
 - [ ] Criar produto e preço no Stripe Dashboard (R$49/mês recorrente)
-- [ ] Instalar `stripe` SDK e configurar `src/lib/stripe/index.ts`
-- [ ] Página `/settings/billing` — exibe plano atual, botão "Fazer upgrade" e "Gerenciar assinatura"
-- [ ] Server Action `createCheckoutSession` — cria Stripe Checkout Session e redireciona
-- [ ] Server Action `createPortalSession` — abre Customer Portal do Stripe
-- [ ] Rota `src/app/api/webhooks/stripe/route.ts` — processa eventos:
-  - [ ] `checkout.session.completed` → ativa plano Pro na tabela `subscriptions`
-  - [ ] `customer.subscription.deleted` → rebaixa para Free
-  - [ ] `invoice.payment_failed` → marca assinatura como inadimplente
-- [ ] Página `/payment/success` e `/payment/cancel` (redirect após checkout)
-- [ ] Banner de upgrade exibido quando limite Free é atingido
+- [x] Instalar `stripe` SDK e configurar `src/lib/stripe/index.ts`
+- [x] Página `/settings/billing` — exibe plano atual, botão "Assinar Pro" e "Portal de cobrança"
+- [x] Server Action `createCheckoutSession` — cria Stripe Checkout Session e redireciona
+- [x] Server Action `createPortalSession` — abre Customer Portal do Stripe
+- [x] Rota `src/app/api/webhooks/stripe/route.ts` — processa eventos:
+  - [x] `checkout.session.completed` → ativa plano Pro na tabela `subscriptions` e `workspaces`
+  - [x] `customer.subscription.deleted` → rebaixa para Free
+  - [x] `invoice.payment_failed` → marca assinatura como inadimplente
+- [x] Página `/payment/success` e `/payment/cancel` (redirect após checkout)
 - [ ] Testar com Stripe CLI (`stripe listen --forward-to localhost:3000/api/webhooks/stripe`)
+
+**Arquivos criados/modificados na aula 4.1:**
+- `src/lib/stripe/index.ts` — client Stripe singleton + export do PRICE_ID
+- `src/lib/actions/billing.ts` — `createCheckoutSession`, `createPortalSession`
+- `src/app/api/webhooks/stripe/route.ts` — webhook (única Route Handler do projeto)
+- `src/app/payment/success/page.tsx` — confirmação de upgrade
+- `src/app/payment/cancel/page.tsx` — cancelamento de checkout
+- `src/app/(dashboard)/settings/billing/page.tsx` — Server Component da página
+- `src/components/billing/BillingPageClient.tsx` — UI com botões e estados de loading
+- `src/components/settings/SettingsNav.tsx` — adicionada aba "Assinatura"
+
+**Status: 🔄 Em andamento (aula 4.1)**
 
 **Commit final:** `feat: Stripe subscription with checkout, webhook, and customer portal`
 

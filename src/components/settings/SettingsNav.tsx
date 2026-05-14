@@ -2,12 +2,13 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Building2, Users } from 'lucide-react'
+import { Building2, Users, CreditCard } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const SETTINGS_NAV = [
-  { href: '/settings/workspace', label: 'Workspace', icon: Building2 },
-  { href: '/settings/members',   label: 'Membros',   icon: Users },
+  { href: '/settings/workspace', label: 'Workspace',  icon: Building2  },
+  { href: '/settings/members',   label: 'Membros',    icon: Users      },
+  { href: '/settings/billing',   label: 'Assinatura', icon: CreditCard },
 ]
 
 export function SettingsNav() {
