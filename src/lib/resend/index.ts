@@ -2,7 +2,8 @@ import { Resend } from 'resend'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
-const FROM = process.env.RESEND_FROM_EMAIL ?? 'PipeFlow CRM <noreply@pipeflow.app>'
+// Em desenvolvimento sem domínio verificado, use onboarding@resend.dev (funciona sem verificação)
+const FROM = process.env.RESEND_FROM_EMAIL ?? 'PipeFlow CRM <onboarding@resend.dev>'
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
 
 export async function sendInviteEmail({

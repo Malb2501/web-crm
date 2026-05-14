@@ -88,8 +88,9 @@ export async function inviteMember(formData: FormData): Promise<ActionResult> {
   })
 
   if (emailError) {
+    console.error('[inviteMember] Resend error:', emailError)
     await supabase.from('workspace_invites').delete().eq('token', invite.token)
-    return { error: 'Erro ao enviar e-mail de convite. Verifique as configurações do Resend.' }
+    return { error: `Erro ao enviar e-mail de convite: ${emailError.message}` }
   }
 
   revalidatePath('/settings/members')
