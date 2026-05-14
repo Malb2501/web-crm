@@ -178,6 +178,41 @@ export type Database = {
           created_at?: string
         }
       }
+      workspace_invites: {
+        Row: {
+          id: string
+          workspace_id: string
+          email: string
+          role: "admin" | "member"
+          token: string
+          invited_by: string | null
+          accepted_at: string | null
+          expires_at: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          workspace_id: string
+          email: string
+          role?: "admin" | "member"
+          token?: string
+          invited_by?: string | null
+          accepted_at?: string | null
+          expires_at?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          workspace_id?: string
+          email?: string
+          role?: "admin" | "member"
+          token?: string
+          invited_by?: string | null
+          accepted_at?: string | null
+          expires_at?: string
+          created_at?: string
+        }
+      }
       subscriptions: {
         Row: {
           workspace_id: string
@@ -244,3 +279,4 @@ export type LeadRow             = Tables<"leads">
 export type DealRow             = Tables<"deals">
 export type ActivityRow         = Tables<"activities">
 export type SubscriptionRow     = Tables<"subscriptions">
+export type WorkspaceInviteRow  = Tables<"workspace_invites">

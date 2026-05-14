@@ -1,9 +1,13 @@
 import { redirect } from "next/navigation"
-import { getUserWorkspaces, getCurrentUser } from "@/lib/data/workspaces"
+import { getUserWorkspaces, getCurrentUser, getActiveWorkspaceId } from "@/lib/data/workspaces"
 import { DashboardShell } from "@/components/layout/DashboardShell"
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const [user, workspaces] = await Promise.all([getCurrentUser(), getUserWorkspaces()])
+  const [user, workspaces, activeWorkspaceId] = await Promise.all([
+    getCurrentUser(),
+    getUserWorkspaces(),
+    getActiveWorkspaceId(),
+  ])
 
   if (!user) redirect("/login")
 
@@ -15,6 +19,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       workspaces={workspaces}
       userName={userName}
       userEmail={userEmail}
+      activeWorkspaceId={activeWorkspaceId ?? undefined}
     >
       {children}
     </DashboardShell>

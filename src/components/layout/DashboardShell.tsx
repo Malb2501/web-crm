@@ -10,9 +10,10 @@ interface DashboardShellProps {
   workspaces: WorkspaceWithPlan[]
   userName: string
   userEmail: string
+  activeWorkspaceId?: string
 }
 
-export function DashboardShell({ children, workspaces, userName, userEmail }: DashboardShellProps) {
+export function DashboardShell({ children, workspaces, userName, userEmail, activeWorkspaceId }: DashboardShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
@@ -23,6 +24,7 @@ export function DashboardShell({ children, workspaces, userName, userEmail }: Da
         workspaces={workspaces}
         userName={userName}
         userEmail={userEmail}
+        activeWorkspaceId={activeWorkspaceId}
       />
       <div className="isolate flex flex-1 flex-col overflow-hidden">
         <TopBar onMenuClick={() => setSidebarOpen(true)} />

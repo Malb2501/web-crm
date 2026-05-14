@@ -25,14 +25,18 @@ export async function signUp(formData: FormData) {
   const email = formData.get('email') as string
   const password = formData.get('password') as string
   const name = formData.get('name') as string
+  const inviteToken = formData.get('inviteToken') as string | null
 
   const supabase = await getSupabaseServerClient()
+
+  const next = inviteToken ? `/invite/${inviteToken}` : '/onboarding'
+
   const { error } = await supabase.auth.signUp({
     email,
     password,
     options: {
       data: { full_name: name },
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=/onboarding`,
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=${encodeURIComponent(next)}`,
     },
   })
 

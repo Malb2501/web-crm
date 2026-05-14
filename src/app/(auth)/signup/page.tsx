@@ -23,9 +23,11 @@ function SignupForm() {
   const searchParams = useSearchParams()
   const serverError = searchParams.get("error")
   const success = searchParams.get("success")
+  const inviteToken = searchParams.get("invite") ?? ""
+  const inviteEmail = searchParams.get("email") ?? ""
 
   const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
+  const [email, setEmail] = useState(inviteEmail)
   const [password, setPassword] = useState("")
   const [terms, setTerms] = useState(false)
   const [errors, setErrors] = useState<FormErrors>({})
@@ -115,7 +117,14 @@ function SignupForm() {
           </div>
         )}
 
+        {inviteToken && (
+          <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700">
+            Crie sua conta para aceitar o convite.
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} noValidate className="space-y-4">
+          <input type="hidden" name="inviteToken" value={inviteToken} />
           <div>
             <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-slate-700">
               Nome completo
