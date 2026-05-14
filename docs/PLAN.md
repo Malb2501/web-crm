@@ -339,14 +339,14 @@
 
 ## M12 — Monetização
 
-**Branch:** `feat/billing`
+**Branch:** `feat/billing` / `feat/billing-nextjs`
 **Objetivo:** Planos Free e Pro funcionais com Stripe Checkout, webhook e Customer Portal.
 
 ### Entregas
 
-- [ ] Criar produto e preço no Stripe Dashboard (R$49/mês recorrente)
+- [x] Criar produto e preço no Stripe Dashboard (R$49/mês recorrente)
 - [x] Instalar `stripe` SDK e configurar `src/lib/stripe/index.ts`
-- [x] Página `/settings/billing` — exibe plano atual, botão "Assinar Pro" e "Portal de cobrança"
+- [x] Página `/settings/billing` — exibe plano atual, barras de uso, botão "Assinar Pro" e "Gerenciar Assinatura"
 - [x] Server Action `createCheckoutSession` — cria Stripe Checkout Session e redireciona
 - [x] Server Action `createPortalSession` — abre Customer Portal do Stripe
 - [x] Rota `src/app/api/webhooks/stripe/route.ts` — processa eventos:
@@ -354,6 +354,10 @@
   - [x] `customer.subscription.deleted` → rebaixa para Free
   - [x] `invoice.payment_failed` → marca assinatura como inadimplente
 - [x] Página `/payment/success` e `/payment/cancel` (redirect após checkout)
+- [x] `src/lib/limits.ts` — `canAddLead()`, `canAddMember()`, `FREE_LEAD_LIMIT`, `FREE_MEMBER_LIMIT`
+- [x] Banner de aviso em `/leads` ao atingir 80% e 100% do limite de leads (link para upgrade)
+- [x] Barras de uso (leads + membros) visíveis em `/settings/billing` para plano Free
+- [x] Contador de membros em `/settings/members` usa `occupiedSlots` (ativos + convites pendentes)
 - [ ] Testar com Stripe CLI (`stripe listen --forward-to localhost:3000/api/webhooks/stripe`)
 
 **Arquivos criados/modificados na aula 4.1:**
@@ -366,9 +370,20 @@
 - `src/components/billing/BillingPageClient.tsx` — UI com botões e estados de loading
 - `src/components/settings/SettingsNav.tsx` — adicionada aba "Assinatura"
 
-**Status: 🔄 Em andamento (aula 4.1)**
+**Arquivos criados/modificados na aula 4.2:**
+- `src/lib/limits.ts` — `canAddLead()`, `canAddMember()` + constantes de limite
+- `src/app/(dashboard)/leads/page.tsx` — passa `leadCount` e `plan` para `LeadsView`
+- `src/app/(dashboard)/settings/billing/page.tsx` — busca `leadCount` e `occupiedSlots` em paralelo
+- `src/app/(dashboard)/settings/members/page.tsx` — passa `occupiedSlots` e `memberLimit`
+- `src/components/leads/LeadsView.tsx` — banner de limite (amarelo 80%, vermelho 100%)
+- `src/components/billing/BillingPageClient.tsx` — barras de uso no card Free, preço no botão
+- `src/components/settings/MembersPageClient.tsx` — usa `occupiedSlots` no contador e barra
 
-**Commit final:** `feat: Stripe subscription with checkout, webhook, and customer portal`
+**Status: ✅ Concluído**
+
+**Commits:**
+- `feat: Stripe checkout, webhook e billing UI (aula 4.1)` — c7257a9
+- `feat: limites de plano Free e página de billing enriquecida (aula 4.2)` — 914fde9
 
 ---
 
