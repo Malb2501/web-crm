@@ -1,8 +1,9 @@
 import { redirect } from 'next/navigation'
 import { getSupabaseServerClient } from '@/lib/supabase/server'
 import { getActiveWorkspaceId } from '@/lib/data/workspaces'
-import { getWorkspaceMembers, getMemberRole, getPendingInvites } from '@/lib/data/members'
+import { getWorkspaceMembers, getMemberRole, getPendingInvites, getOccupiedSlots } from '@/lib/data/members'
 import { MembersPageClient } from '@/components/settings/MembersPageClient'
+import { FREE_MEMBER_LIMIT } from '@/lib/limits'
 
 export default async function MembersPage() {
   const supabase = await getSupabaseServerClient()
@@ -12,11 +13,12 @@ export default async function MembersPage() {
   const workspaceId = await getActiveWorkspaceId()
   if (!workspaceId) redirect('/onboarding')
 
-  const [members, pendingInvites, role, workspaceResult] = await Promise.all([
+  const [members, pendingInvites, role, workspaceResult, occupiedSlots] = await Promise.all([
     getWorkspaceMembers(),
     getPendingInvites(),
     getMemberRole(workspaceId),
     supabase.from('workspaces').select('plan').eq('id', workspaceId).single(),
+    getOccupiedSlots(workspaceId),
   ])
 
   const plan = workspaceResult.data?.plan ?? 'free'
@@ -28,6 +30,8 @@ export default async function MembersPage() {
       currentUserId={user.id}
       isAdmin={role === 'admin'}
       plan={plan}
+      occupiedSlots={occupiedSlots}
+      memberLimit={FREE_MEMBER_LIMIT}
     />
   )
 }

@@ -1,7 +1,7 @@
 "use client"
 
 import { useTransition } from 'react'
-import { Loader2, Zap, Check, CreditCard } from 'lucide-react'
+import { Loader2, Zap, Check, CreditCard, Users, UserPlus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -12,14 +12,11 @@ interface Props {
   plan: WorkspacePlan
   status: string
   hasCustomer: boolean
+  leadCount: number
+  memberCount: number
+  leadLimit: number
+  memberLimit: number
 }
-
-const FREE_FEATURES = [
-  'Até 50 leads',
-  'Até 2 colaboradores',
-  'Pipeline Kanban',
-  'Dashboard de métricas',
-]
 
 const PRO_FEATURES = [
   'Leads ilimitados',
@@ -29,7 +26,38 @@ const PRO_FEATURES = [
   'Suporte prioritário',
 ]
 
-export function BillingPageClient({ plan, status, hasCustomer }: Props) {
+function UsageBar({ label, icon: Icon, used, limit }: {
+  label: string
+  icon: React.ElementType
+  used: number
+  limit: number
+}) {
+  const pct = Math.min((used / limit) * 100, 100)
+  const atLimit = used >= limit
+  const nearLimit = !atLimit && pct >= 80
+
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between text-xs">
+        <span className="flex items-center gap-1.5 text-muted-foreground">
+          <Icon className="h-3.5 w-3.5" />
+          {label}
+        </span>
+        <span className={`font-medium ${atLimit ? 'text-destructive' : nearLimit ? 'text-amber-500' : 'text-foreground'}`}>
+          {used} / {limit}
+        </span>
+      </div>
+      <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+        <div
+          className={`h-full rounded-full transition-all ${atLimit ? 'bg-destructive' : nearLimit ? 'bg-amber-500' : 'bg-accent'}`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  )
+}
+
+export function BillingPageClient({ plan, status, hasCustomer, leadCount, memberCount, leadLimit, memberLimit }: Props) {
   const [isPendingCheckout, startCheckout] = useTransition()
   const [isPendingPortal, startPortal] = useTransition()
 
@@ -65,20 +93,30 @@ export function BillingPageClient({ plan, status, hasCustomer }: Props) {
               <span className="text-muted-foreground">/mês</span>
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <ul className="space-y-2">
-              {FREE_FEATURES.map((f) => (
-                <li key={f} className="flex items-center gap-2 text-sm">
-                  <Check className="h-4 w-4 text-muted-foreground" />
-                  {f}
+          <CardContent className="space-y-4">
+            {!isPro ? (
+              <div className="space-y-3">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Uso atual</p>
+                <UsageBar label="Leads" icon={Users} used={leadCount} limit={leadLimit} />
+                <UsageBar label="Membros (+ convites)" icon={UserPlus} used={memberCount} limit={memberLimit} />
+              </div>
+            ) : (
+              <ul className="space-y-2">
+                <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Check className="h-4 w-4" />
+                  Até {leadLimit} leads
                 </li>
-              ))}
-            </ul>
+                <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Check className="h-4 w-4" />
+                  Até {memberLimit} colaboradores
+                </li>
+              </ul>
+            )}
           </CardContent>
         </Card>
 
         {/* Pro */}
-        <Card className={isPro ? 'ring-2 ring-accent' : ''}>
+        <Card className={isPro ? 'ring-2 ring-accent' : 'border-accent/30'}>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-base flex items-center gap-1.5">
@@ -118,7 +156,7 @@ export function BillingPageClient({ plan, status, hasCustomer }: Props) {
                   ) : (
                     <Zap className="mr-2 h-4 w-4" />
                   )}
-                  {isPendingCheckout ? 'Redirecionando...' : 'Assinar Pro'}
+                  {isPendingCheckout ? 'Redirecionando...' : 'Assinar Pro — R$49/mês'}
                 </Button>
               </form>
             )}
@@ -147,7 +185,7 @@ export function BillingPageClient({ plan, status, hasCustomer }: Props) {
                 ) : (
                   <CreditCard className="mr-2 h-4 w-4" />
                 )}
-                {isPendingPortal ? 'Abrindo...' : 'Portal de cobrança'}
+                {isPendingPortal ? 'Abrindo...' : 'Gerenciar Assinatura'}
               </Button>
             </form>
           </div>

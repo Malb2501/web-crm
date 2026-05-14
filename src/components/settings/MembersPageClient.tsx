@@ -15,14 +15,14 @@ import { InviteMemberForm } from './InviteMemberForm'
 import { updateMemberRole, removeMember, cancelInvite } from '@/lib/actions/members'
 import type { MemberWithProfile, PendingInvite } from '@/lib/data/members'
 
-const FREE_LIMIT = 2
-
 type Props = {
   members: MemberWithProfile[]
   pendingInvites: PendingInvite[]
   currentUserId: string
   isAdmin: boolean
   plan: string
+  occupiedSlots: number
+  memberLimit: number
 }
 
 function MemberRow({
@@ -183,9 +183,10 @@ export function MembersPageClient({
   currentUserId,
   isAdmin,
   plan,
+  occupiedSlots,
+  memberLimit,
 }: Props) {
-  const totalOccupied = members.length
-  const atLimit = plan === 'free' && totalOccupied >= FREE_LIMIT
+  const atLimit = plan === 'free' && occupiedSlots >= memberLimit
 
   return (
     <div className="space-y-8">
@@ -197,10 +198,10 @@ export function MembersPageClient({
             <span className="text-sm font-medium">Membros do workspace</span>
           </div>
           {plan === 'free' ? (
-            <span className="text-sm text-muted-foreground">
-              <span className="font-semibold text-foreground">{totalOccupied}</span>
+            <span className={`text-sm ${occupiedSlots >= memberLimit ? 'text-destructive font-semibold' : 'text-muted-foreground'}`}>
+              <span className="font-semibold text-foreground">{occupiedSlots}</span>
               {' / '}
-              <span>{FREE_LIMIT}</span>
+              <span>{memberLimit}</span>
               <span className="ml-1">do plano Free</span>
             </span>
           ) : (
@@ -214,8 +215,8 @@ export function MembersPageClient({
         {plan === 'free' && (
           <div className="mt-2 h-1.5 w-full rounded-full bg-muted overflow-hidden">
             <div
-              className="h-full rounded-full bg-accent transition-all"
-              style={{ width: `${Math.min((totalOccupied / FREE_LIMIT) * 100, 100)}%` }}
+              className={`h-full rounded-full transition-all ${occupiedSlots >= memberLimit ? 'bg-destructive' : 'bg-accent'}`}
+              style={{ width: `${Math.min((occupiedSlots / memberLimit) * 100, 100)}%` }}
             />
           </div>
         )}
@@ -260,7 +261,7 @@ export function MembersPageClient({
 
           {atLimit ? (
             <div className="rounded-md bg-amber-500/10 border border-amber-500/20 p-4 text-sm text-amber-400">
-              <strong>Limite atingido.</strong> O plano Free permite no máximo {FREE_LIMIT} membros.{' '}
+              <strong>Limite atingido.</strong> O plano Free permite no máximo {memberLimit} membros (incluindo convites pendentes).{' '}
               <a href="/settings/billing" className="underline underline-offset-2">
                 Faça upgrade para o Pro
               </a>{' '}
