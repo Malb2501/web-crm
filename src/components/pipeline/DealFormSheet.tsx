@@ -14,18 +14,16 @@ import {
 } from "@/components/ui/select"
 import type { Deal, DealStage } from "@/types"
 import { STAGE_CONFIG } from "./StageBadge"
-import { MOCK_LEADS } from "@/lib/mock/leads"
 
 const STAGES = Object.entries(STAGE_CONFIG) as [DealStage, typeof STAGE_CONFIG[DealStage]][]
 
-const ANA   = { id: "user-1", name: "Ana Silva",     email: "ana@pipeflow.com" }
-const BRUNO = { id: "user-2", name: "Bruno Martins", email: "bruno@pipeflow.com" }
-const OWNERS = [ANA, BRUNO]
+type AvailableLead = { id: string; name: string; company: string | null }
 
 interface DealFormSheetProps {
   open: boolean
   defaultStage?: DealStage
   deal?: Deal
+  availableLeads: AvailableLead[]
   onClose: () => void
   onSave: (deal: Deal) => void
 }
@@ -36,12 +34,12 @@ function emptyForm(stage?: DealStage): Partial<Deal> {
     title: "",
     value: 0,
     leadId: "",
-    ownerId: "user-1",
+    ownerId: "",
     deadline: "",
   }
 }
 
-export function DealFormSheet({ open, defaultStage, deal, onClose, onSave }: DealFormSheetProps) {
+export function DealFormSheet({ open, defaultStage, deal, availableLeads, onClose, onSave }: DealFormSheetProps) {
   const isEdit = !!deal
   const [form, setForm] = useState<Partial<Deal>>(isEdit ? deal : emptyForm(defaultStage))
 
@@ -55,23 +53,21 @@ export function DealFormSheet({ open, defaultStage, deal, onClose, onSave }: Dea
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!form.title || !form.value || !form.stage) return
+    if (!form.title || !form.stage) return
 
-    const selectedLead = MOCK_LEADS.find(l => l.id === form.leadId)
-    const selectedOwner = OWNERS.find(o => o.id === form.ownerId)
+    const selectedLead = availableLeads.find(l => l.id === form.leadId)
 
     const saved: Deal = {
-      id: deal?.id ?? `deal-${Date.now()}`,
-      workspaceId: "ws-1",
+      id: deal?.id ?? `deal-new-${Date.now()}`,
+      workspaceId: deal?.workspaceId ?? "",
       leadId: form.leadId ?? "",
       lead: selectedLead
-        ? { id: selectedLead.id, name: selectedLead.name, company: selectedLead.company }
+        ? { id: selectedLead.id, name: selectedLead.name, company: selectedLead.company ?? undefined }
         : undefined,
       title: form.title,
-      value: Number(form.value),
+      value: Number(form.value) || 0,
       stage: form.stage,
-      ownerId: form.ownerId ?? "user-1",
-      owner: selectedOwner ?? ANA,
+      ownerId: form.ownerId ?? "",
       deadline: form.deadline || undefined,
       createdAt: deal?.createdAt ?? new Date().toISOString(),
     }
@@ -106,7 +102,7 @@ export function DealFormSheet({ open, defaultStage, deal, onClose, onSave }: Dea
                 <SelectValue placeholder="Selecionar lead…" />
               </SelectTrigger>
               <SelectContent>
-                {MOCK_LEADS.map(lead => (
+                {availableLeads.map(lead => (
                   <SelectItem key={lead.id} value={lead.id}>
                     {lead.name} {lead.company ? `— ${lead.company}` : ""}
                   </SelectItem>
@@ -117,7 +113,7 @@ export function DealFormSheet({ open, defaultStage, deal, onClose, onSave }: Dea
 
           {/* Valor */}
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="deal-value">Valor estimado (R$) *</Label>
+            <Label htmlFor="deal-value">Valor estimado (R$)</Label>
             <Input
               id="deal-value"
               type="number"
@@ -126,7 +122,6 @@ export function DealFormSheet({ open, defaultStage, deal, onClose, onSave }: Dea
               placeholder="Ex: 4800"
               value={form.value ?? ""}
               onChange={e => set("value", e.target.value)}
-              required
             />
           </div>
 
@@ -142,21 +137,6 @@ export function DealFormSheet({ open, defaultStage, deal, onClose, onSave }: Dea
                   <SelectItem key={key} value={key}>
                     {cfg.label}
                   </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Responsável */}
-          <div className="flex flex-col gap-1.5">
-            <Label>Responsável</Label>
-            <Select value={form.ownerId ?? "user-1"} onValueChange={v => set("ownerId", v)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {OWNERS.map(o => (
-                  <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>

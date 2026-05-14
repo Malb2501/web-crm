@@ -1,11 +1,12 @@
 "use client"
 
-import { useState } from "react"
-import { Phone, Mail, Users, FileText, Plus, X } from "lucide-react"
+import { useState, useTransition } from "react"
+import { Phone, Mail, Users, FileText, Plus, X, Calendar } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { MOCK_ACTIVITIES } from "@/lib/mock/leads"
+import { createActivity } from "@/lib/actions/activities"
 import type { Activity, ActivityType } from "@/types"
 
 type ActivityConfig = {
@@ -29,6 +30,16 @@ const TYPE_OPTIONS: { value: ActivityType; label: string }[] = [
   { value: "note",    label: "Nota"     },
 ]
 
+function formatScheduledDate(date: string) {
+  // date é "YYYY-MM-DD" — parseamos como local para evitar off-by-one de timezone
+  const [y, m, d] = date.split("-").map(Number)
+  return new Date(y, m - 1, d).toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  })
+}
+
 function formatDateTime(iso: string) {
   return new Date(iso).toLocaleDateString("pt-BR", {
     day: "2-digit",
@@ -43,44 +54,67 @@ function initials(name: string) {
   return name.split(" ").slice(0, 2).map(n => n[0]).join("").toUpperCase()
 }
 
-export function ActivityTimeline({ leadId }: { leadId: string }) {
-  const initial = MOCK_ACTIVITIES
-    .filter(a => a.leadId === leadId)
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+interface ActivityTimelineProps {
+  leadId: string
+  initialActivities: Activity[]
+}
 
-  const [activities, setActivities] = useState<Activity[]>(initial)
+export function ActivityTimeline({ leadId, initialActivities }: ActivityTimelineProps) {
+  const [activities, setActivities] = useState<Activity[]>(initialActivities)
   const [isAdding, setIsAdding] = useState(false)
   const [newType, setNewType] = useState<ActivityType>("call")
   const [newDesc, setNewDesc] = useState("")
+  const [newDate, setNewDate] = useState("")
   const [descError, setDescError] = useState("")
+  const [serverError, setServerError] = useState("")
+  const [isPending, startTransition] = useTransition()
 
   const handleSave = () => {
     if (!newDesc.trim()) {
       setDescError("Descrição é obrigatória")
       return
     }
-    const activity: Activity = {
-      id: `act-${Date.now()}`,
-      leadId,
-      workspaceId: "ws-1",
-      type: newType,
-      description: newDesc.trim(),
-      authorId: "user-1",
-      author: { id: "user-1", name: "Ana Silva", email: "ana@pipeflow.com" },
-      createdAt: new Date().toISOString(),
-    }
-    setActivities(prev => [activity, ...prev])
-    setNewDesc("")
-    setNewType("call")
-    setIsAdding(false)
     setDescError("")
+    setServerError("")
+
+    startTransition(async () => {
+      const result = await createActivity({
+        leadId,
+        type: newType,
+        description: newDesc.trim(),
+        scheduledDate: newDate || undefined,
+      })
+
+      if (!result.success) {
+        setServerError(result.error)
+        return
+      }
+
+      const optimistic: Activity = {
+        id: result.id,
+        leadId,
+        workspaceId: "",
+        type: newType,
+        description: newDesc.trim(),
+        authorId: "",
+        scheduledDate: newDate || undefined,
+        createdAt: new Date().toISOString(),
+      }
+      setActivities(prev => [optimistic, ...prev])
+      setNewDesc("")
+      setNewDate("")
+      setNewType("call")
+      setIsAdding(false)
+    })
   }
 
   const handleCancel = () => {
     setIsAdding(false)
     setNewDesc("")
+    setNewDate("")
     setNewType("call")
     setDescError("")
+    setServerError("")
   }
 
   return (
@@ -156,18 +190,37 @@ export function ActivityTimeline({ leadId }: { leadId: string }) {
               }}
               placeholder="Descreva o que aconteceu..."
               className="min-h-[80px] text-sm"
+              disabled={isPending}
             />
             {descError && (
               <p className="text-xs text-destructive">{descError}</p>
             )}
+            {serverError && (
+              <p className="text-xs text-destructive">{serverError}</p>
+            )}
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="activity-date" className="text-xs">Data de execução</Label>
+            <Input
+              id="activity-date"
+              type="date"
+              value={newDate}
+              onChange={e => setNewDate(e.target.value)}
+              disabled={isPending}
+              className="text-sm"
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Opcional — quando esta atividade está agendada para ocorrer.
+            </p>
           </div>
 
           <div className="flex justify-end gap-2">
-            <Button variant="outline" size="sm" onClick={handleCancel}>
+            <Button variant="outline" size="sm" onClick={handleCancel} disabled={isPending}>
               Cancelar
             </Button>
-            <Button size="sm" onClick={handleSave}>
-              Salvar
+            <Button size="sm" onClick={handleSave} disabled={isPending}>
+              {isPending ? "Salvando..." : "Salvar"}
             </Button>
           </div>
         </div>
@@ -219,6 +272,14 @@ export function ActivityTimeline({ leadId }: { leadId: string }) {
                     <p className="mt-1 text-sm text-foreground/80 leading-relaxed">
                       {activity.description}
                     </p>
+                    {activity.scheduledDate && (
+                      <div className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5">
+                        <Calendar className="h-3 w-3 text-muted-foreground" />
+                        <span className="text-[11px] text-muted-foreground">
+                          {formatScheduledDate(activity.scheduledDate)}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               )

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useTransition, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Plus, Search, ChevronLeft, ChevronRight, Pencil, Users } from "lucide-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { LeadStatusBadge } from "@/components/leads/LeadStatusBadge"
 import { LeadFormSheet, type LeadFormData } from "@/components/leads/LeadFormSheet"
-import { MOCK_LEADS } from "@/lib/mock/leads"
+import { createLead, updateLead, deleteLead } from "@/lib/actions/leads"
 import type { Lead, LeadStatus } from "@/types"
 
 const ITEMS_PER_PAGE = 10
@@ -34,21 +34,33 @@ function formatDate(iso: string) {
   })
 }
 
-export function LeadsView() {
+interface LeadsViewProps {
+  initialLeads: Lead[]
+}
+
+export function LeadsView({ initialLeads }: LeadsViewProps) {
   const router = useRouter()
-  const [leads, setLeads] = useState<Lead[]>(MOCK_LEADS)
+  const [isPending, startTransition] = useTransition()
+  const [leads, setLeads] = useState<Lead[]>(initialLeads)
+
+  useEffect(() => {
+    setLeads(initialLeads)
+  }, [initialLeads])
+
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState<LeadStatus | "all">("all")
   const [page, setPage] = useState(1)
   const [formOpen, setFormOpen] = useState(false)
   const [editingLead, setEditingLead] = useState<Lead | null>(null)
+  const [actionError, setActionError] = useState<string | null>(null)
 
   const filtered = leads.filter(lead => {
     const term = search.toLowerCase()
     const matchSearch =
       !term ||
       lead.name.toLowerCase().includes(term) ||
-      (lead.company ?? "").toLowerCase().includes(term)
+      (lead.company ?? "").toLowerCase().includes(term) ||
+      (lead.email ?? "").toLowerCase().includes(term)
     const matchStatus = statusFilter === "all" || lead.status === statusFilter
     return matchSearch && matchStatus
   })
@@ -72,39 +84,62 @@ export function LeadsView() {
 
   const openCreate = () => {
     setEditingLead(null)
+    setActionError(null)
     setFormOpen(true)
   }
 
   const openEdit = (lead: Lead, e: React.MouseEvent) => {
     e.stopPropagation()
     setEditingLead(lead)
+    setActionError(null)
     setFormOpen(true)
   }
 
   const handleFormSubmit = (data: LeadFormData) => {
-    if (editingLead) {
-      setLeads(prev =>
-        prev.map(l => (l.id === editingLead.id ? { ...l, ...data } : l))
-      )
-    } else {
-      const newLead: Lead = {
-        id: `lead-${Date.now()}`,
-        workspaceId: "ws-1",
-        ownerId: "user-1",
-        owner: { id: "user-1", name: "Ana Silva", email: "ana@pipeflow.com" },
-        createdAt: new Date().toISOString(),
-        ...data,
+    setActionError(null)
+    startTransition(async () => {
+      if (editingLead) {
+        const result = await updateLead(editingLead.id, data)
+        if (!result.success) {
+          setActionError(result.error)
+          return
+        }
+        setLeads(prev =>
+          prev.map(l => l.id === editingLead.id ? { ...l, ...data } : l)
+        )
+      } else {
+        const result = await createLead(data)
+        if (!result.success) {
+          setActionError(result.error)
+          return
+        }
+        const newLead: Lead = {
+          id: result.id,
+          workspaceId: "",
+          ownerId: "",
+          createdAt: new Date().toISOString(),
+          ...data,
+        }
+        setLeads(prev => [newLead, ...prev])
       }
-      setLeads(prev => [newLead, ...prev])
-    }
-    setFormOpen(false)
-    setEditingLead(null)
+      setFormOpen(false)
+      setEditingLead(null)
+      router.refresh()
+    })
   }
 
   const handleDelete = (id: string) => {
-    setLeads(prev => prev.filter(l => l.id !== id))
-    setFormOpen(false)
-    setEditingLead(null)
+    startTransition(async () => {
+      const result = await deleteLead(id)
+      if (!result.success) {
+        setActionError(result.error)
+        return
+      }
+      setLeads(prev => prev.filter(l => l.id !== id))
+      setFormOpen(false)
+      setEditingLead(null)
+      router.refresh()
+    })
   }
 
   const isFiltered = !!(search || statusFilter !== "all")
@@ -116,14 +151,20 @@ export function LeadsView() {
           <div>
             <h2 className="text-xl font-semibold text-foreground">Leads</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              {leads.length} leads no workspace
+              {leads.length} {leads.length === 1 ? "lead" : "leads"} no workspace
             </p>
           </div>
-          <Button onClick={openCreate} className="w-full sm:w-auto gap-2">
+          <Button onClick={openCreate} className="w-full sm:w-auto gap-2" disabled={isPending}>
             <Plus className="h-4 w-4" />
             Novo Lead
           </Button>
         </div>
+
+        {actionError && (
+          <div className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            {actionError}
+          </div>
+        )}
 
         <Card>
           <CardHeader className="pb-4 space-y-3">
@@ -131,7 +172,7 @@ export function LeadsView() {
               <div className="relative flex-1 max-w-sm">
                 <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar por nome ou empresa..."
+                  placeholder="Buscar por nome, empresa ou e-mail..."
                   className="pl-8"
                   value={search}
                   onChange={e => handleSearchChange(e.target.value)}
@@ -185,9 +226,6 @@ export function LeadsView() {
                         <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                           Status
                         </th>
-                        <th className="hidden px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground lg:table-cell">
-                          Responsável
-                        </th>
                         <th className="hidden px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground xl:table-cell">
                           Criado em
                         </th>
@@ -229,23 +267,6 @@ export function LeadsView() {
 
                           <td className="px-6 py-4">
                             <LeadStatusBadge status={lead.status} />
-                          </td>
-
-                          <td className="hidden px-6 py-4 lg:table-cell">
-                            {lead.owner ? (
-                              <div className="flex items-center gap-2">
-                                <div className="h-6 w-6 flex-shrink-0 rounded-full bg-muted flex items-center justify-center">
-                                  <span className="text-[10px] font-semibold text-muted-foreground">
-                                    {initials(lead.owner.name)}
-                                  </span>
-                                </div>
-                                <span className="text-sm text-muted-foreground">
-                                  {lead.owner.name}
-                                </span>
-                              </div>
-                            ) : (
-                              <span className="text-muted-foreground">—</span>
-                            )}
                           </td>
 
                           <td className="hidden px-6 py-4 text-xs text-muted-foreground xl:table-cell">
@@ -315,6 +336,7 @@ export function LeadsView() {
         onClose={() => { setFormOpen(false); setEditingLead(null) }}
         onSubmit={handleFormSubmit}
         onDelete={handleDelete}
+        isPending={isPending}
       />
     </>
   )

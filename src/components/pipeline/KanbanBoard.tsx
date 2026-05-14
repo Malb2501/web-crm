@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useTransition, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import {
   DndContext,
   DragOverlay,
@@ -15,7 +16,7 @@ import { arrayMove } from "@dnd-kit/sortable"
 import { Plus, Kanban, CircleDollarSign } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { Deal, DealStage } from "@/types"
-import { MOCK_DEALS } from "@/lib/mock/deals"
+import { moveDeal, createDeal, updateDeal, deleteDeal } from "@/lib/actions/deals"
 import { KanbanColumn } from "./KanbanColumn"
 import { DealCard } from "./DealCard"
 import { DealFormSheet } from "./DealFormSheet"
@@ -30,11 +31,25 @@ const STAGES: DealStage[] = [
   "closed_lost",
 ]
 
-export function KanbanBoard() {
-  const [deals, setDeals] = useState<Deal[]>(MOCK_DEALS)
+type AvailableLead = { id: string; name: string; company: string | null }
+
+interface KanbanBoardProps {
+  initialDeals: Deal[]
+  availableLeads: AvailableLead[]
+}
+
+export function KanbanBoard({ initialDeals, availableLeads }: KanbanBoardProps) {
+  const router = useRouter()
+  const [deals, setDeals] = useState<Deal[]>(initialDeals)
   const [activeId, setActiveId] = useState<string | null>(null)
   const [formSheet, setFormSheet] = useState<{ open: boolean; stage?: DealStage; deal?: Deal }>({ open: false })
   const [detailDeal, setDetailDeal] = useState<Deal | null>(null)
+  const [dealError, setDealError] = useState<string | null>(null)
+  const [isPending, startTransition] = useTransition()
+
+  useEffect(() => {
+    setDeals(initialDeals)
+  }, [initialDeals])
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
@@ -64,7 +79,12 @@ export function KanbanBoard() {
     if (STAGES.includes(overId as DealStage)) {
       const targetStage = overId as DealStage
       if (deal.stage !== targetStage) {
+        // Optimistic update
         setDeals(prev => prev.map(d => d.id === activeId ? { ...d, stage: targetStage } : d))
+        startTransition(async () => {
+          await moveDeal(activeId, targetStage)
+          router.refresh()
+        })
       }
       return
     }
@@ -81,21 +101,59 @@ export function KanbanBoard() {
         return [...others, ...arrayMove(stageDeals, oldIdx, newIdx)]
       })
     } else {
-      setDeals(prev => prev.map(d => d.id === activeId ? { ...d, stage: overDeal.stage } : d))
+      const targetStage = overDeal.stage
+      setDeals(prev => prev.map(d => d.id === activeId ? { ...d, stage: targetStage } : d))
+      startTransition(async () => {
+        await moveDeal(activeId, targetStage)
+        router.refresh()
+      })
     }
   }
 
   function handleSaveDeal(deal: Deal) {
-    setDeals(prev => {
-      const exists = prev.find(d => d.id === deal.id)
-      return exists ? prev.map(d => d.id === deal.id ? deal : d) : [deal, ...prev]
+    setDealError(null)
+    startTransition(async () => {
+      if (deal.id.startsWith("deal-new-")) {
+        const result = await createDeal({
+          title: deal.title,
+          leadId: deal.leadId ?? "",
+          value: deal.value,
+          stage: deal.stage,
+          ownerId: deal.ownerId,
+          deadline: deal.deadline ?? "",
+        })
+        if (!result.success) {
+          setDealError(result.error)
+          return
+        }
+        setDeals(prev => [{ ...deal, id: result.id }, ...prev])
+      } else {
+        const result = await updateDeal(deal.id, {
+          title: deal.title,
+          leadId: deal.leadId ?? "",
+          value: deal.value,
+          stage: deal.stage,
+          ownerId: deal.ownerId,
+          deadline: deal.deadline ?? "",
+        })
+        if (!result.success) {
+          setDealError(result.error)
+          return
+        }
+        setDeals(prev => prev.map(d => d.id === deal.id ? deal : d))
+      }
+      setFormSheet({ open: false })
+      router.refresh()
     })
-    setFormSheet({ open: false })
   }
 
   function handleDeleteDeal(id: string) {
     setDeals(prev => prev.filter(d => d.id !== id))
     setDetailDeal(null)
+    startTransition(async () => {
+      await deleteDeal(id)
+      router.refresh()
+    })
   }
 
   function handleEditFromDetail(deal: Deal) {
@@ -105,9 +163,12 @@ export function KanbanBoard() {
 
   function handleMoveDeal(id: string, stage: DealStage) {
     setDeals(prev => prev.map(d => d.id === id ? { ...d, stage } : d))
+    startTransition(async () => {
+      await moveDeal(id, stage)
+      router.refresh()
+    })
   }
 
-  // Metrics
   const activeDeals  = deals.filter(d => d.stage !== "closed_lost")
   const wonDeals     = deals.filter(d => d.stage === "closed_won")
   const pipelineVal  = activeDeals.filter(d => d.stage !== "closed_won").reduce((s, d) => s + d.value, 0)
@@ -130,7 +191,6 @@ export function KanbanBoard() {
           </p>
         </div>
 
-        {/* Stats + CTA */}
         <div className="flex items-center gap-3 flex-wrap">
           <div className="flex items-center gap-1.5 rounded-lg border border-border/60 bg-card px-3 py-1.5">
             <Kanban className="h-3.5 w-3.5 text-muted-foreground" />
@@ -142,12 +202,24 @@ export function KanbanBoard() {
             <span className="text-xs text-muted-foreground">Ganho</span>
             <span className="text-sm font-semibold text-success tabular-nums">{fmt(wonVal)}</span>
           </div>
-          <Button size="sm" onClick={() => setFormSheet({ open: true })} className="gap-1.5 shrink-0">
+          <Button
+            size="sm"
+            onClick={() => setFormSheet({ open: true })}
+            className="gap-1.5 shrink-0"
+            disabled={isPending}
+          >
             <Plus className="h-4 w-4" />
             Novo Negócio
           </Button>
         </div>
       </div>
+
+      {/* ── Erro de ação ────────────────────────────────────── */}
+      {dealError && (
+        <div className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-2.5 text-sm text-destructive shrink-0">
+          {dealError}
+        </div>
+      )}
 
       {/* ── Board ───────────────────────────────────────────── */}
       <DndContext
@@ -171,7 +243,6 @@ export function KanbanBoard() {
             />
           ))}
 
-          {/* Right breathing room */}
           <div className="w-1 shrink-0" />
         </div>
 
@@ -194,6 +265,7 @@ export function KanbanBoard() {
         open={formSheet.open}
         defaultStage={formSheet.stage}
         deal={formSheet.deal}
+        availableLeads={availableLeads}
         onClose={() => setFormSheet({ open: false })}
         onSave={handleSaveDeal}
       />

@@ -7,13 +7,12 @@ import {
   Building2,
   Briefcase,
   Calendar,
-  User,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { LeadStatusBadge } from "@/components/leads/LeadStatusBadge"
 import { ActivityTimeline } from "@/components/leads/ActivityTimeline"
-import { MOCK_LEADS } from "@/lib/mock/leads"
+import { getLead, getLeadActivities, getLeadDeals } from "@/lib/data/leads"
 import type { DealStage } from "@/types"
 
 function initials(name: string) {
@@ -27,20 +26,6 @@ function formatDate(iso: string) {
     year: "numeric",
   })
 }
-
-const MOCK_DEALS: {
-  id: string
-  leadId: string
-  title: string
-  value: number
-  stage: DealStage
-}[] = [
-  { id: "d1", leadId: "lead-02", title: "Licença Anual Pro",          value:  4800, stage: "proposal_sent" },
-  { id: "d2", leadId: "lead-04", title: "Plano Pro — 12 meses",       value:  5880, stage: "closed_won"    },
-  { id: "d3", leadId: "lead-07", title: "Enterprise — 20 usuários",   value: 14400, stage: "negotiation"   },
-  { id: "d4", leadId: "lead-09", title: "Renovação Anual",            value:  3600, stage: "closed_won"    },
-  { id: "d5", leadId: "lead-12", title: "Piloto 3 meses",             value:  1470, stage: "proposal_sent" },
-]
 
 const STAGE_LABEL: Record<DealStage, string> = {
   new_lead:      "Novo Lead",
@@ -69,11 +54,14 @@ export default async function LeadDetailPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const lead = MOCK_LEADS.find(l => l.id === id)
+
+  const [lead, activities, deals] = await Promise.all([
+    getLead(id),
+    getLeadActivities(id),
+    getLeadDeals(id),
+  ])
 
   if (!lead) notFound()
-
-  const deals = MOCK_DEALS.filter(d => d.leadId === id)
 
   return (
     <div className="space-y-6">
@@ -106,7 +94,7 @@ export default async function LeadDetailPage({
         <div className="lg:col-span-2">
           <Card>
             <CardContent className="pt-6">
-              <ActivityTimeline leadId={lead.id} />
+              <ActivityTimeline leadId={lead.id} initialActivities={activities} />
             </CardContent>
           </Card>
         </div>
@@ -117,9 +105,11 @@ export default async function LeadDetailPage({
               <CardTitle className="text-sm font-semibold">Informações</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3.5">
-              <InfoRow icon={<Mail className="h-4 w-4" />} label="E-mail">
-                <span className="break-all">{lead.email}</span>
-              </InfoRow>
+              {lead.email && (
+                <InfoRow icon={<Mail className="h-4 w-4" />} label="E-mail">
+                  <span className="break-all">{lead.email}</span>
+                </InfoRow>
+              )}
 
               {lead.phone && (
                 <InfoRow icon={<Phone className="h-4 w-4" />} label="Telefone">
@@ -136,12 +126,6 @@ export default async function LeadDetailPage({
               {lead.jobTitle && (
                 <InfoRow icon={<Briefcase className="h-4 w-4" />} label="Cargo">
                   {lead.jobTitle}
-                </InfoRow>
-              )}
-
-              {lead.owner && (
-                <InfoRow icon={<User className="h-4 w-4" />} label="Responsável">
-                  {lead.owner.name}
                 </InfoRow>
               )}
 
@@ -178,8 +162,8 @@ export default async function LeadDetailPage({
                         {deal.title}
                       </p>
                       <div className="flex items-center justify-between gap-2">
-                        <Badge variant={STAGE_VARIANT[deal.stage]} className="text-xs">
-                          {STAGE_LABEL[deal.stage]}
+                        <Badge variant={STAGE_VARIANT[deal.stage as DealStage]} className="text-xs">
+                          {STAGE_LABEL[deal.stage as DealStage]}
                         </Badge>
                         <span className="text-xs font-semibold text-foreground">
                           {deal.value.toLocaleString("pt-BR", {
