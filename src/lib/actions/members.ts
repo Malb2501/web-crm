@@ -222,7 +222,9 @@ export async function acceptInvite(token: string): Promise<ActionResult> {
     })
   }
 
-  revalidatePath('/', 'layout')
+  // Sem revalidatePath aqui — acceptInvite é chamado durante render de página
+  // (Server Component InvitePage), não de uma Server Action. O redirect('/dashboard')
+  // que se segue já força um novo render completo.
   return { success: true }
 }
 

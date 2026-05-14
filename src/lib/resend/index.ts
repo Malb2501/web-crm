@@ -93,9 +93,13 @@ export async function sendInviteEmail({
 </html>
 `
 
+  // Em dev com Resend free, só é possível enviar para o e-mail do dono da conta.
+  // Configure RESEND_DEV_OVERRIDE_EMAIL=seu@email.com no .env.local para redirecionar.
+  const recipient = process.env.RESEND_DEV_OVERRIDE_EMAIL ?? to
+
   return resend.emails.send({
     from: FROM,
-    to,
+    to: recipient,
     subject: `${inviterName} convidou você para o workspace "${workspaceName}" no PipeFlow`,
     html,
   })
