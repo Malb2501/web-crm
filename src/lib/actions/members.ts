@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { getSupabaseServerClient } from '@/lib/supabase/server'
 import { getActiveWorkspaceId } from '@/lib/data/workspaces'
-import { getMemberCount } from '@/lib/data/members'
+import { getOccupiedSlots } from '@/lib/data/members'
 import { sendInviteEmail } from '@/lib/resend'
 
 const FREE_MEMBER_LIMIT = 2
@@ -25,7 +25,6 @@ export async function inviteMember(formData: FormData): Promise<ActionResult> {
   const workspaceId = await getActiveWorkspaceId()
   if (!workspaceId) return { error: 'Workspace não encontrado.' }
 
-  // Verificar papel do usuário atual
   const { data: currentMember } = await supabase
     .from('workspace_members')
     .select('role')
@@ -37,7 +36,6 @@ export async function inviteMember(formData: FormData): Promise<ActionResult> {
     return { error: 'Apenas administradores podem convidar membros.' }
   }
 
-  // Buscar dados do workspace (nome + plano)
   const { data: workspace } = await supabase
     .from('workspaces')
     .select('name, plan')
@@ -46,17 +44,16 @@ export async function inviteMember(formData: FormData): Promise<ActionResult> {
 
   if (!workspace) return { error: 'Workspace não encontrado.' }
 
-  // Verificar limite do plano Free
+  // Bug 1 fix: conta membros + convites pendentes juntos
   if (workspace.plan === 'free') {
-    const memberCount = await getMemberCount(workspaceId)
-    if (memberCount >= FREE_MEMBER_LIMIT) {
+    const occupied = await getOccupiedSlots(workspaceId)
+    if (occupied >= FREE_MEMBER_LIMIT) {
       return {
         error: `O plano Free permite no máximo ${FREE_MEMBER_LIMIT} membros. Faça upgrade para o plano Pro para convidar mais colaboradores.`,
       }
     }
   }
 
-  // Verificar se já é membro (via auth.users lookup pelo email)
   const { data: existingInvite } = await supabase
     .from('workspace_invites')
     .select('id')
@@ -70,15 +67,9 @@ export async function inviteMember(formData: FormData): Promise<ActionResult> {
     return { error: 'Já existe um convite pendente para este e-mail.' }
   }
 
-  // Criar convite
   const { data: invite, error: inviteError } = await supabase
     .from('workspace_invites')
-    .insert({
-      workspace_id: workspaceId,
-      email,
-      role,
-      invited_by: user.id,
-    })
+    .insert({ workspace_id: workspaceId, email, role, invited_by: user.id })
     .select('token')
     .single()
 
@@ -86,8 +77,9 @@ export async function inviteMember(formData: FormData): Promise<ActionResult> {
     return { error: 'Erro ao criar convite. Tente novamente.' }
   }
 
-  // Enviar e-mail
   const inviterName = user.user_metadata?.full_name ?? user.email ?? 'Alguém'
+
+  // Bug 7 fix: sendInviteEmail retorna Promise<{ data, error }> do Resend SDK
   const { error: emailError } = await sendInviteEmail({
     to: email,
     inviterName,
@@ -96,7 +88,6 @@ export async function inviteMember(formData: FormData): Promise<ActionResult> {
   })
 
   if (emailError) {
-    // Desfaz o convite se o e-mail falhar
     await supabase.from('workspace_invites').delete().eq('token', invite.token)
     return { error: 'Erro ao enviar e-mail de convite. Verifique as configurações do Resend.' }
   }
@@ -125,6 +116,15 @@ export async function cancelInvite(inviteId: string): Promise<ActionResult> {
   return { success: true }
 }
 
+async function countAdmins(supabase: Awaited<ReturnType<typeof getSupabaseServerClient>>, workspaceId: string): Promise<number> {
+  const { count } = await supabase
+    .from('workspace_members')
+    .select('*', { count: 'exact', head: true })
+    .eq('workspace_id', workspaceId)
+    .eq('role', 'admin')
+  return count ?? 0
+}
+
 export async function updateMemberRole(
   targetUserId: string,
   newRole: 'admin' | 'member'
@@ -138,6 +138,14 @@ export async function updateMemberRole(
 
   if (user.id === targetUserId) {
     return { error: 'Você não pode alterar seu próprio papel.' }
+  }
+
+  // Bug 6 fix: impede rebaixar o único admin
+  if (newRole === 'member') {
+    const adminCount = await countAdmins(supabase, workspaceId)
+    if (adminCount <= 1) {
+      return { error: 'O workspace precisa ter pelo menos um administrador.' }
+    }
   }
 
   const { error } = await supabase
@@ -164,6 +172,21 @@ export async function removeMember(targetUserId: string): Promise<ActionResult> 
     return { error: 'Use a opção "Sair do workspace" para se remover.' }
   }
 
+  // Bug 5 fix: impede remover o único admin
+  const { data: targetMember } = await supabase
+    .from('workspace_members')
+    .select('role')
+    .eq('workspace_id', workspaceId)
+    .eq('user_id', targetUserId)
+    .maybeSingle()
+
+  if (targetMember?.role === 'admin') {
+    const adminCount = await countAdmins(supabase, workspaceId)
+    if (adminCount <= 1) {
+      return { error: 'Não é possível remover o único administrador do workspace.' }
+    }
+  }
+
   const { error } = await supabase
     .from('workspace_members')
     .delete()
@@ -176,62 +199,30 @@ export async function removeMember(targetUserId: string): Promise<ActionResult> 
   return { success: true }
 }
 
-export async function acceptInvite(token: string): Promise<ActionResult & { workspaceId?: string }> {
+// Bug 2 fix: usa RPC accept_workspace_invite (SECURITY DEFINER) para contornar RLS
+// Bug 4 fix: faz switchWorkspace após aceite bem-sucedido
+export async function acceptInvite(token: string): Promise<ActionResult> {
   const supabase = await getSupabaseServerClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Você precisa estar logado para aceitar este convite.' }
 
-  const { data: invite } = await supabase
-    .from('workspace_invites')
-    .select('id, workspace_id, email, role, accepted_at, expires_at')
-    .eq('token', token)
-    .maybeSingle()
+  const { data, error } = await supabase.rpc('accept_workspace_invite', { p_token: token })
 
-  if (!invite) return { error: 'Convite inválido ou não encontrado.' }
-  if (invite.accepted_at) return { error: 'Este convite já foi utilizado.' }
-  if (new Date(invite.expires_at) < new Date()) return { error: 'Este convite expirou.' }
+  if (error) return { error: 'Erro ao processar convite. Tente novamente.' }
 
-  // Verificar se já é membro
-  const { data: existing } = await supabase
-    .from('workspace_members')
-    .select('user_id')
-    .eq('workspace_id', invite.workspace_id)
-    .eq('user_id', user.id)
-    .maybeSingle()
+  const result = data as { error?: string; success?: boolean; workspace_id?: string }
 
-  if (!existing) {
-    // Verificar limite Free antes de inserir
-    const { data: workspace } = await supabase
-      .from('workspaces')
-      .select('plan')
-      .eq('id', invite.workspace_id)
-      .single()
+  if (result.error) return { error: result.error }
 
-    if (workspace?.plan === 'free') {
-      const memberCount = await getMemberCount(invite.workspace_id)
-      if (memberCount >= FREE_MEMBER_LIMIT) {
-        return { error: 'O workspace atingiu o limite de membros do plano Free.' }
-      }
-    }
-
-    const { error: memberError } = await supabase
-      .from('workspace_members')
-      .insert({
-        workspace_id: invite.workspace_id,
-        user_id: user.id,
-        role: invite.role,
-      })
-
-    if (memberError) return { error: 'Erro ao entrar no workspace.' }
+  // Bug 4 fix: ativa o workspace recém-aceito
+  if (result.workspace_id) {
+    await supabase.auth.updateUser({
+      data: { active_workspace_id: result.workspace_id },
+    })
   }
 
-  // Marcar convite como aceito
-  await supabase
-    .from('workspace_invites')
-    .update({ accepted_at: new Date().toISOString() })
-    .eq('id', invite.id)
-
-  return { success: true, workspaceId: invite.workspace_id }
+  revalidatePath('/', 'layout')
+  return { success: true }
 }
 
 export async function switchWorkspace(workspaceId: string): Promise<ActionResult> {
@@ -248,8 +239,6 @@ export async function switchWorkspace(workspaceId: string): Promise<ActionResult
 
   if (!member) return { error: 'Você não tem acesso a este workspace.' }
 
-  // Persiste workspace ativo em cookie via Supabase session metadata
-  // Usamos update de metadata do usuário para armazenar a preferência
   await supabase.auth.updateUser({
     data: { active_workspace_id: workspaceId },
   })

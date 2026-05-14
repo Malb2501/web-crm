@@ -1,6 +1,6 @@
 "use client"
 
-import { useActionState } from 'react'
+import { useActionState, useEffect, useRef } from 'react'
 import { Mail, UserPlus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -24,9 +24,17 @@ async function action(_prev: State, formData: FormData): Promise<State> {
 
 export function InviteMemberForm() {
   const [state, formAction, isPending] = useActionState(action, null)
+  const formRef = useRef<HTMLFormElement>(null)
+
+  // Bug 9 fix: reseta o formulário quando a action retorna sucesso
+  useEffect(() => {
+    if (state?.success) {
+      formRef.current?.reset()
+    }
+  }, [state])
 
   return (
-    <form action={formAction} className="space-y-4">
+    <form ref={formRef} action={formAction} className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-[1fr_160px_auto] items-end">
         <div className="space-y-1.5">
           <Label htmlFor="invite-email">E-mail do convidado</Label>
@@ -39,7 +47,6 @@ export function InviteMemberForm() {
               placeholder="colaborador@empresa.com"
               className="pl-9"
               disabled={isPending}
-              key={state?.success ? 'reset' : 'stable'}
             />
           </div>
         </div>

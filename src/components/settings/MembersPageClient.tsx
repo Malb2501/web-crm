@@ -56,7 +56,7 @@ function MemberRow({
   }
 
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 opacity-100 transition-opacity aria-busy:opacity-60">
+    <div className={`flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 transition-opacity ${isPending ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent/10 text-sm font-semibold text-accent">
         {initials || '?'}
       </div>

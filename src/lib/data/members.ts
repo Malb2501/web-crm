@@ -117,3 +117,22 @@ export async function getMemberCount(workspaceId: string): Promise<number> {
     .eq('workspace_id', workspaceId)
   return count ?? 0
 }
+
+export async function getOccupiedSlots(workspaceId: string): Promise<number> {
+  const supabase = await getSupabaseServerClient()
+
+  const [{ count: memberCount }, { count: inviteCount }] = await Promise.all([
+    supabase
+      .from('workspace_members')
+      .select('*', { count: 'exact', head: true })
+      .eq('workspace_id', workspaceId),
+    supabase
+      .from('workspace_invites')
+      .select('*', { count: 'exact', head: true })
+      .eq('workspace_id', workspaceId)
+      .is('accepted_at', null)
+      .gt('expires_at', new Date().toISOString()),
+  ])
+
+  return (memberCount ?? 0) + (inviteCount ?? 0)
+}
