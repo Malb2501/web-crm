@@ -105,6 +105,7 @@ export async function getLeadActivities(leadId: string): Promise<Activity[]> {
     type: row.type,
     description: row.description,
     authorId: row.author_id ?? '',
+    scheduledDate: row.scheduled_date ?? undefined,
     createdAt: row.created_at,
   }))
 }

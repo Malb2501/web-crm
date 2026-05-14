@@ -1,9 +1,10 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import { Phone, Mail, Users, FileText, Plus, X } from "lucide-react"
+import { Phone, Mail, Users, FileText, Plus, X, Calendar } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { createActivity } from "@/lib/actions/activities"
 import type { Activity, ActivityType } from "@/types"
@@ -29,6 +30,16 @@ const TYPE_OPTIONS: { value: ActivityType; label: string }[] = [
   { value: "note",    label: "Nota"     },
 ]
 
+function formatScheduledDate(date: string) {
+  // date é "YYYY-MM-DD" — parseamos como local para evitar off-by-one de timezone
+  const [y, m, d] = date.split("-").map(Number)
+  return new Date(y, m - 1, d).toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  })
+}
+
 function formatDateTime(iso: string) {
   return new Date(iso).toLocaleDateString("pt-BR", {
     day: "2-digit",
@@ -53,6 +64,7 @@ export function ActivityTimeline({ leadId, initialActivities }: ActivityTimeline
   const [isAdding, setIsAdding] = useState(false)
   const [newType, setNewType] = useState<ActivityType>("call")
   const [newDesc, setNewDesc] = useState("")
+  const [newDate, setNewDate] = useState("")
   const [descError, setDescError] = useState("")
   const [serverError, setServerError] = useState("")
   const [isPending, startTransition] = useTransition()
@@ -70,6 +82,7 @@ export function ActivityTimeline({ leadId, initialActivities }: ActivityTimeline
         leadId,
         type: newType,
         description: newDesc.trim(),
+        scheduledDate: newDate || undefined,
       })
 
       if (!result.success) {
@@ -84,10 +97,12 @@ export function ActivityTimeline({ leadId, initialActivities }: ActivityTimeline
         type: newType,
         description: newDesc.trim(),
         authorId: "",
+        scheduledDate: newDate || undefined,
         createdAt: new Date().toISOString(),
       }
       setActivities(prev => [optimistic, ...prev])
       setNewDesc("")
+      setNewDate("")
       setNewType("call")
       setIsAdding(false)
     })
@@ -96,6 +111,7 @@ export function ActivityTimeline({ leadId, initialActivities }: ActivityTimeline
   const handleCancel = () => {
     setIsAdding(false)
     setNewDesc("")
+    setNewDate("")
     setNewType("call")
     setDescError("")
     setServerError("")
@@ -184,6 +200,21 @@ export function ActivityTimeline({ leadId, initialActivities }: ActivityTimeline
             )}
           </div>
 
+          <div className="space-y-1.5">
+            <Label htmlFor="activity-date" className="text-xs">Data de execução</Label>
+            <Input
+              id="activity-date"
+              type="date"
+              value={newDate}
+              onChange={e => setNewDate(e.target.value)}
+              disabled={isPending}
+              className="text-sm"
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Opcional — quando esta atividade está agendada para ocorrer.
+            </p>
+          </div>
+
           <div className="flex justify-end gap-2">
             <Button variant="outline" size="sm" onClick={handleCancel} disabled={isPending}>
               Cancelar
@@ -241,6 +272,14 @@ export function ActivityTimeline({ leadId, initialActivities }: ActivityTimeline
                     <p className="mt-1 text-sm text-foreground/80 leading-relaxed">
                       {activity.description}
                     </p>
+                    {activity.scheduledDate && (
+                      <div className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5">
+                        <Calendar className="h-3 w-3 text-muted-foreground" />
+                        <span className="text-[11px] text-muted-foreground">
+                          {formatScheduledDate(activity.scheduledDate)}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               )

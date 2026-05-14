@@ -154,6 +154,7 @@ export type Database = {
           type: "call" | "email" | "meeting" | "note"
           description: string
           author_id: string | null
+          scheduled_date: string | null
           created_at: string
         }
         Insert: {
@@ -163,6 +164,7 @@ export type Database = {
           type: "call" | "email" | "meeting" | "note"
           description: string
           author_id?: string | null
+          scheduled_date?: string | null
           created_at?: string
         }
         Update: {
@@ -172,6 +174,7 @@ export type Database = {
           type?: "call" | "email" | "meeting" | "note"
           description?: string
           author_id?: string | null
+          scheduled_date?: string | null
           created_at?: string
         }
       }

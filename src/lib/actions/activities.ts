@@ -13,6 +13,7 @@ export async function createActivity(formData: {
   leadId: string
   type: ActivityType
   description: string
+  scheduledDate?: string
 }): Promise<ActivityActionResult> {
   const supabase = await getSupabaseServerClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -33,6 +34,7 @@ export async function createActivity(formData: {
       author_id: user.id,
       type: formData.type,
       description: formData.description.trim(),
+      scheduled_date: formData.scheduledDate || null,
     })
     .select('id')
     .single()

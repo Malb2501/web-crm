@@ -77,6 +77,7 @@ export interface Activity {
   description: string
   authorId: string
   author?: WorkspaceMember["user"]
+  scheduledDate?: string
   createdAt: string
 }
 
