@@ -271,6 +271,8 @@
 
 **Commits entregues:**
 - `feat: leads, deals e dashboard com dados reais do Supabase (aula 3.4)` — de8b0e0
+- `fix: corrige 8 bugs encontrados na revisao da aula 3.4` — ae6ddf1
+- `feat: campo de data de execucao em atividades` — ca30701
 
 **Status: ✅ Concluído**
 
@@ -296,21 +298,21 @@
 
 ## M10 — Kanban Backend
 
-**Branch:** `feat/kanban-backend`
+**Branch:** `feat/leads-data` (entregue junto com M9)
 **Objetivo:** Substituir dados mockados do pipeline por deals reais com persistência do drag-and-drop.
 
 ### Entregas
 
-- [ ] Server Component em `/pipeline` — busca deals agrupados por stage
-- [ ] Server Action `createDeal` — cria negócio vinculado a lead e workspace
-- [ ] Server Action `updateDeal` — edição de campos do negócio
-- [ ] Server Action `moveDeal` — atualiza campo `stage` ao arrastar (chamado pelo client component)
-- [ ] Server Action `deleteDeal` — remoção com confirmação
-- [ ] Otimistic update no `KanbanBoard`: move o card localmente antes da resposta do servidor
-- [ ] Revalidação de cache com `revalidatePath('/pipeline')` após cada mutação
-- [ ] Testar arrastar cards entre colunas com persistência após reload
+- [x] Server Component em `/pipeline` — busca deals agrupados por stage
+- [x] Server Action `createDeal` — cria negócio vinculado a lead e workspace
+- [x] Server Action `updateDeal` — edição de campos do negócio
+- [x] Server Action `moveDeal` — atualiza campo `stage` ao arrastar (chamado pelo client component)
+- [x] Server Action `deleteDeal` — remoção com confirmação
+- [x] Optimistic update no `KanbanBoard`: move o card localmente antes da resposta do servidor
+- [x] Revalidação de cache com `revalidatePath('/pipeline')` após cada mutação
+- [x] Testar arrastar cards entre colunas com persistência após reload
 
-**Commit final:** `feat: kanban pipeline connected to Supabase with persistent drag-and-drop`
+**Status: ✅ Concluído** (entregue no mesmo PR do M9)
 
 ---
 
