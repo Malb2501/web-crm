@@ -24,6 +24,7 @@ interface SidebarProps {
   workspaces: WorkspaceWithPlan[]
   userName: string
   userEmail: string
+  activeWorkspaceId?: string
 }
 
 function NavItem({
@@ -65,11 +66,11 @@ function NavItem({
   )
 }
 
-export function Sidebar({ open, onClose, workspaces, userName, userEmail }: SidebarProps) {
+export function Sidebar({ open, onClose, workspaces, userName, userEmail, activeWorkspaceId }: SidebarProps) {
   const pathname = usePathname()
 
   const isActive = (href: string) =>
-    pathname === href || (href !== "/dashboard" && pathname.startsWith(href + "/"))
+    pathname === href || pathname.startsWith(href + "/")
 
   return (
     <>
@@ -110,7 +111,7 @@ export function Sidebar({ open, onClose, workspaces, userName, userEmail }: Side
         </div>
 
         <div className="border-b border-sidebar-border px-3 py-3">
-          <WorkspaceSwitcher workspaces={workspaces} />
+          <WorkspaceSwitcher workspaces={workspaces} activeWorkspaceId={activeWorkspaceId} />
         </div>
 
         <nav className="flex-1 overflow-y-auto px-3 py-4">

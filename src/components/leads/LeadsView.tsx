@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Plus, Search, ChevronLeft, ChevronRight, Pencil, Users } from "lucide-react"
+import { Plus, Search, ChevronLeft, ChevronRight, Pencil, Users, Zap, AlertTriangle } from "lucide-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -36,9 +36,12 @@ function formatDate(iso: string) {
 
 interface LeadsViewProps {
   initialLeads: Lead[]
+  plan?: string
+  totalLeadCount?: number
+  leadLimit?: number
 }
 
-export function LeadsView({ initialLeads }: LeadsViewProps) {
+export function LeadsView({ initialLeads, plan = 'free', totalLeadCount = 0, leadLimit = 50 }: LeadsViewProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [leads, setLeads] = useState<Lead[]>(initialLeads)
@@ -159,6 +162,10 @@ export function LeadsView({ initialLeads }: LeadsViewProps) {
             Novo Lead
           </Button>
         </div>
+
+        {plan === 'free' && (
+          <LeadLimitBanner count={totalLeadCount} limit={leadLimit} />
+        )}
 
         {actionError && (
           <div className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
@@ -339,6 +346,47 @@ export function LeadsView({ initialLeads }: LeadsViewProps) {
         isPending={isPending}
       />
     </>
+  )
+}
+
+function LeadLimitBanner({ count, limit }: { count: number; limit: number }) {
+  const atLimit = count >= limit
+  const nearLimit = !atLimit && count >= limit * 0.8
+
+  if (!atLimit && !nearLimit) return null
+
+  return (
+    <div className={`flex items-start gap-3 rounded-lg border px-4 py-3 text-sm ${
+      atLimit
+        ? 'border-destructive/30 bg-destructive/10 text-destructive'
+        : 'border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+    }`}>
+      {atLimit ? (
+        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+      ) : (
+        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+      )}
+      <div className="flex-1">
+        {atLimit ? (
+          <>
+            <strong>Limite de leads atingido.</strong> Você está usando {count}/{limit} leads do plano Free.{' '}
+            <a href="/settings/billing" className="underline underline-offset-2 font-medium">
+              Faça upgrade para o Pro
+            </a>{' '}
+            para leads ilimitados.
+          </>
+        ) : (
+          <>
+            <strong>Quase no limite.</strong> Você está usando {count}/{limit} leads do plano Free.{' '}
+            <a href="/settings/billing" className="underline underline-offset-2 font-medium">
+              <Zap className="inline h-3.5 w-3.5 mr-0.5" />
+              Conheça o plano Pro
+            </a>{' '}
+            para leads ilimitados.
+          </>
+        )}
+      </div>
+    </div>
   )
 }
 
