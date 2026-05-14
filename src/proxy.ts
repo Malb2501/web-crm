@@ -29,19 +29,23 @@ export async function proxy(request: NextRequest) {
     }
   )
 
-  const { data: { user } } = await supabase.auth.getUser()
+  // getSession() lê o cookie localmente — sem chamada de rede ao Supabase.
+  // getUser() faz uma chamada de rede a cada request e causa timeout de 20s+
+  // quando o Supabase está lento. A verificação real fica nos Server Components.
+  const { data: { session } } = await supabase.auth.getSession()
+
   const { pathname } = request.nextUrl
 
   const isProtected = PROTECTED_PATHS.some((p) => pathname.startsWith(p))
   const isAuthPage = AUTH_PATHS.some((p) => pathname.startsWith(p))
 
-  if (isProtected && !user) {
+  if (isProtected && !session) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
   }
 
-  if (isAuthPage && user) {
+  if (isAuthPage && session) {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
     return NextResponse.redirect(url)
